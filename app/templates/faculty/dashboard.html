@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Faculty Assessment Dashboard - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<!-- Institutional Subheader -->
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' + faculty.college.logo_filename) }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                     class="college-badge-logo me-3 shadow-sm" alt="College Logo">
+                <div>
+                    <h4 class="institutional-title">{{ faculty.college.name }}</h4>
+                    <div class="institutional-meta">
+                        <strong>{{ faculty.full_name }}</strong> ({{ faculty.designation }}) &bull; Dept. of {{ faculty.department_name }}
+                        <span class="badge bg-light text-dark border ms-2 font-monospace">{{ faculty.faculty_id_code }}</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('faculty.create_exam') }}" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-plus-square me-1"></i> Create New Examination
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 pb-5">
+    <!-- Stat Tiles -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ total_exams }}</div>
+                <div class="stat-label">Examinations Created</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile success">
+                <div class="stat-value">{{ active_exams }}</div>
+                <div class="stat-label">Active / Live</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile warning">
+                <div class="stat-value">{{ scheduled_exams }}</div>
+                <div class="stat-label">Scheduled / Upcoming</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile danger">
+                <div class="stat-value">{{ total_evaluated }}</div>
+                <div class="stat-label">Candidates Evaluated</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course & Subject Selector Bar -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('faculty.dashboard') }}" class="row g-2 align-items-center">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary mb-0">
+                        <i class="bi bi-funnel me-1"></i> Select Course & Subject:
+                    </label>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" name="course_id" onchange="this.form.submit()">
+                        <option value="">-- All Courses --</option>
+                        {% for c in courses %}
+                            <option value="{{ c.id }}" {% if selected_course_id == c.id %}selected{% endif %}>
+                                {{ c.name }} ({{ c.code }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select form-select-sm" name="subject_id" onchange="this.form.submit()">
+                        <option value="">-- All Subjects (View All Question Banks) --</option>
+                        {% for sub in subjects %}
+                            <option value="{{ sub.id }}" {% if selected_subject_id == sub.id %}selected{% endif %}>
+                                {{ sub.code }} - {{ sub.name }} (Sem {{ sub.semester }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    {% if selected_course_id or selected_subject_id %}
+                        <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
+                            Clear Filter
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- If Subject is Selected: Display Exact Questions, Keys & Solutions -->
+    {% if selected_subject_id and selected_subject %}
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-primary me-2">{{ selected_subject.code }}</span>
+                    <h5 class="fw-bold text-primary mb-0 d-inline-block align-middle">
+                        {{ selected_subject.name }} &bull; Question Bank & Answer Keys
+                    </h5>
+                </div>
+                <span class="badge bg-secondary">{{ subject_questions|length }} Questions Configured</span>
+            </div>
+            <div class="card-body p-4">
+                {% for item in subject_questions %}
+                    <div class="border rounded p-3 mb-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary">Exam: {{ item.exam.title }} &bull; Q{{ item.question.question_number }}</span>
+                            <span class="small text-muted fw-bold">Weight: {{ item.question.marks }} pt(s) {% if item.question.negative_marks > 0 %}| Neg: -{{ item.question.negative_marks }}{% endif %}</span>
+                        </div>
+                        <p class="fw-semibold text-dark mb-3">{{ item.question.question_text }}</p>
+
+                        <div class="row g-2 mb-2">
+                            {% for opt in item.question.options %}
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded small {% if opt.is_correct %}border-success bg-success-subtle text-success fw-bold{% else %}bg-light text-secondary{% endif %}">
+                                        <span class="me-1">{{ chr(64 + opt.option_number) }}.</span>
+                                        {{ opt.option_text }}
+                                        {% if opt.is_correct %}
+                                            <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill me-1"></i> Correct Key</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        {% if item.question.explanation %}
+                            <div class="small bg-light p-2 rounded border mt-2">
+                                <strong class="text-primary"><i class="bi bi-lightbulb-fill me-1"></i> Official Solution & Explanation:</strong>
+                                <span>{{ item.question.explanation }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        No questions currently configured under this subject.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Faculty Examinations Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="bi bi-file-earmark-check me-2"></i> Created Examinations
+            </h5>
+            <a href="{{ url_for('faculty.create_exam') }}" class="btn btn-sm btn-primary">+ Create New Exam</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Examination Title</th>
+                        <th>Course & Branch</th>
+                        <th>Curriculum Subject</th>
+                        <th>Date & Window</th>
+                        <th>Duration</th>
+                        <th>Questions / Marks</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams %}
+                        <tr>
+                            <td><strong class="text-primary">{{ exam.title }}</strong></td>
+                            <td>{{ exam.course.code }} &bull; {{ exam.branch.code }} (Sem {{ exam.semester }})</td>
+                            <td>{{ exam.subject.name }} <span class="badge bg-light text-dark border font-monospace">{{ exam.subject.code }}</span></td>
+                            <td>
+                                <div>{{ exam.exam_date.strftime('%d-%b-%Y') }}</div>
+                                <small class="text-muted">{{ exam.start_time.strftime('%H:%M') }} to {{ exam.end_time.strftime('%H:%M') }}</small>
+                            </td>
+                            <td>{{ exam.duration_minutes }} Mins</td>
+                            <td>
+                                <span class="badge bg-secondary me-1">{{ exam.questions|length }} Qs</span>
+                                <small class="text-muted">{{ exam.total_marks }} pts</small>
+                            </td>
+                            <td><span class="badge-status {{ exam.status }}">{{ exam.status }}</span></td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('faculty.manage_questions', exam_id=exam.id) }}" class="btn btn-outline-primary" title="Manage Questions">
+                                        <i class="bi bi-list-ol me-1"></i> Questions
+                                    </a>
+                                    {% if exam.status == 'draft' %}
+                                        <form method="POST" action="{{ url_for('faculty.publish_exam', exam_id=exam.id) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-success ms-1" onclick="return confirm('Publish and activate this examination for students?');">
+                                                <i class="bi bi-check2-circle me-1"></i> Publish
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <a href="{{ url_for('faculty.examination_report_detail', exam_id=exam.id) }}" class="btn btn-outline-secondary ms-1" title="View Analytics & Reports">
+                                        <i class="bi bi-bar-chart me-1"></i> Reports
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">No examinations found matching the selected filter.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

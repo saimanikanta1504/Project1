@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit College - {{ college.name }}{% else %}Register College{% endif %} - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-building me-2"></i>
+                        {% if is_edit %}Modify College: {{ college.name }}{% else %}Register New Institutional College{% endif %}
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3">1. Institutional Information</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold text-muted">College Full Name</label>
+                                <input type="text" class="form-control" name="name" value="{{ college.name if is_edit else '' }}" required placeholder="e.g. ABC Engineering College">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold text-muted">Unique College Code</label>
+                                <input type="text" class="form-control text-uppercase" name="code" value="{{ college.code if is_edit else '' }}" required placeholder="e.g. ABCENG">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Institutional Official Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ college.email if is_edit else '' }}" required placeholder="registrar@abccollege.edu">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Contact Telephone</label>
+                                <input type="text" class="form-control" name="contact_number" value="{{ college.contact_number if is_edit else '' }}" required placeholder="+91 40 2345 6789">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold text-muted">Campus Physical Address & Location</label>
+                                <textarea class="form-control" name="address" rows="2" required placeholder="Campus Boulevard, Hyderabad, Telangana">{{ college.address if is_edit else '' }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">College Logo (PNG / JPG / SVG)</label>
+                                <input type="file" class="form-control" name="logo" accept="image/*">
+                                {% if is_edit and college.logo_filename %}
+                                    <small class="text-muted d-block mt-1">Current file: {{ college.logo_filename }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Operational Status</label>
+                                <select class="form-select" name="status">
+                                    <option value="active" {% if is_edit and college.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="pending" {% if is_edit and college.status == 'pending' %}selected{% endif %}>Pending Review</option>
+                                    <option value="deactivated" {% if is_edit and college.status == 'deactivated' %}selected{% endif %}>Deactivated</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {% if not is_edit %}
+                        <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3 mt-4">2. Designated College Administrator Account</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Administrator Full Name</label>
+                                <input type="text" class="form-control" name="admin_name" required placeholder="Dr. R. Ramanathan">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Admin User ID Code</label>
+                                <input type="text" class="form-control" name="admin_id" required placeholder="ADM-ABC-01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Admin Email Address</label>
+                                <input type="email" class="form-control" name="admin_email" required placeholder="admin@abccollege.edu">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Temporary Password</label>
+                                <input type="password" class="form-control" name="admin_password" required placeholder="Confidential password">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{{ url_for('super_admin.colleges') }}" class="btn btn-outline-secondary px-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                {% if is_edit %}Save Changes{% else %}Register College & Admin{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

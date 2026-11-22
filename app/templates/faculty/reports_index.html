@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Faculty Examination Reports & Attendance - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' + faculty.college.logo_filename) }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                     class="college-badge-logo me-3 shadow-sm" alt="College Logo">
+                <div>
+                    <h4 class="institutional-title mb-1">{{ faculty.college.name }}</h4>
+                    <div class="institutional-meta">
+                        <strong>{{ faculty.full_name }}</strong> ({{ faculty.designation }}) &bull; Dept. of {{ faculty.department_name }}
+                        <span class="badge bg-light text-dark border ms-2 font-monospace">{{ faculty.faculty_id_code }}</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+                <a href="{{ url_for('faculty.create_exam') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-square me-1"></i> Create Exam
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 pb-5">
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-file-earmark-bar-graph-fill me-2 text-primary"></i> Examination Reports & Attendance Registry
+                </h5>
+                <small class="text-secondary">Select an authorized examination to inspect attendance ledgers, marks distribution, and competition rankings.</small>
+            </div>
+            <span class="badge bg-primary px-3 py-2">{{ exam_cards|length }} Authorized Examinations</span>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-institutional align-middle mb-0 table-hover">
+                    <thead>
+                        <tr>
+                            <th>Examination Name</th>
+                            <th>Subject Paper</th>
+                            <th>Course / Branch</th>
+                            <th>Semester</th>
+                            <th>Exam Date</th>
+                            <th>Total Marks</th>
+                            <th class="text-center">Registered</th>
+                            <th class="text-center">Attended</th>
+                            <th class="text-center">Absent</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for card in exam_cards %}
+                            {% set ex = card.exam %}
+                            <tr>
+                                <td>
+                                    <strong class="text-primary">{{ ex.title }}</strong>
+                                    <div class="small text-muted">{{ ex.questions|length }} Multiple Choice Questions</div>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold">{{ ex.subject.name }}</span>
+                                    <span class="badge bg-light text-dark border font-monospace ms-1">{{ ex.subject.code }}</span>
+                                </td>
+                                <td>{{ ex.course.code }} - {{ ex.branch.code }}</td>
+                                <td>Semester {{ ex.semester }}</td>
+                                <td>{{ ex.exam_date.strftime('%d-%b-%Y') }}</td>
+                                <td><strong>{{ ex.total_marks }}</strong> Pts</td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary font-monospace">{{ card.total_registered }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success font-monospace">{{ card.present_count }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if card.absent_count > 0 %}bg-danger{% else %}bg-light text-dark border{% endif %} font-monospace">
+                                        {{ card.absent_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if ex.status == 'active' %}
+                                        <span class="badge bg-success">Active / Live</span>
+                                    {% elif ex.status == 'completed' %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% elif ex.status == 'scheduled' %}
+                                        <span class="badge bg-warning text-dark">Scheduled</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark border">{{ ex.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('faculty.examination_report_detail', exam_id=ex.id) }}" class="btn btn-sm btn-primary fw-semibold px-3">
+                                        <i class="bi bi-file-earmark-text me-1"></i> View Report
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="11" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                    No authorized examinations found. Create an examination or request subject assignment from your college administrator.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

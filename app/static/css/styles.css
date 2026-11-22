@@ -1,0 +1,321 @@
+:root {
+    --primary-color: #163B65;
+    --primary-dark: #0F2744;
+    --primary-light: #245EA8;
+    --secondary-color: #245EA8;
+    --bg-body: #F5F7FA;
+    --bg-surface: #FFFFFF;
+    --text-primary: #202B3C;
+    --text-muted: #64748B;
+    --border-color: #E2E8F0;
+    --success-color: #218653;
+    --warning-color: #D99A25;
+    --danger-color: #D64545;
+    --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    font-family: var(--font-stack);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Institutional Navigation */
+.navbar-institutional {
+    background-color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-light);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.navbar-institutional .navbar-brand {
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.5px;
+}
+
+.navbar-institutional .nav-link {
+    color: #E2E8F0;
+    font-size: 0.92rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    transition: color 0.15s ease-in-out;
+}
+
+.navbar-institutional .nav-link:hover,
+.navbar-institutional .nav-link.active {
+    color: #FFFFFF;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+/* Dashboard Institutional Subheader */
+.dashboard-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.25rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.college-badge-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: #FFFFFF;
+    padding: 4px;
+}
+
+.institutional-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 2px;
+}
+
+.institutional-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Academic Cards */
+.card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+    background-color: #FAFAFA;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 0.85rem 1.25rem;
+}
+
+/* Metric / Stat Tiles */
+.stat-tile {
+    border-left: 4px solid var(--primary-light);
+    padding: 1rem 1.25rem;
+    background: #FFFFFF;
+}
+
+.stat-tile.success {
+    border-left-color: var(--success-color);
+}
+
+.stat-tile.warning {
+    border-left-color: var(--warning-color);
+}
+
+.stat-tile.danger {
+    border-left-color: var(--danger-color);
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Institutional Tables */
+.table-institutional {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-institutional th {
+    background-color: #F1F5F9;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+}
+
+.table-institutional td {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-institutional tr:hover td {
+    background-color: #F8FAFC;
+}
+
+/* Examination CBT Layout */
+.exam-top-bar {
+    background-color: var(--primary-dark);
+    color: #FFFFFF;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+.timer-box {
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 0.35rem 0.85rem;
+    font-family: monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #38BDF8;
+}
+
+.timer-box.urgent {
+    background: #450A0A;
+    border-color: #DC2626;
+    color: #F87171;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+.question-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.palette-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: #F1F5F9;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.palette-btn:hover {
+    filter: brightness(0.95);
+}
+
+.palette-btn.active {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+}
+
+.palette-btn.answered {
+    background-color: var(--success-color);
+    color: #FFFFFF;
+    border-color: var(--success-color);
+}
+
+.palette-btn.review {
+    background-color: var(--warning-color);
+    color: #FFFFFF;
+    border-color: var(--warning-color);
+}
+
+.palette-btn.unanswered {
+    background-color: #E2E8F0;
+    color: var(--text-primary);
+}
+
+.cbt-option-item {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    background: #FFFFFF;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: flex-start;
+}
+
+.cbt-option-item:hover {
+    background-color: #F8FAFC;
+    border-color: var(--secondary-color);
+}
+
+.cbt-option-item.selected {
+    background-color: #EFF6FF;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 1px var(--secondary-color);
+}
+
+.cbt-option-radio {
+    margin-top: 3px;
+    margin-right: 12px;
+}
+
+/* Institutional Footer */
+footer.institutional-footer {
+    background-color: var(--primary-dark);
+    color: #94A3B8;
+    margin-top: auto;
+    padding: 1.5rem 0;
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Status Badges */
+.badge-status {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.badge-status.active {
+    background-color: #DCFCE7;
+    color: #166534;
+}
+
+.badge-status.scheduled {
+    background-color: #DBEAFE;
+    color: #1E40AF;
+}
+
+.badge-status.completed {
+    background-color: #E2E8F0;
+    color: #475569;
+}
+
+.badge-status.draft {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.badge-status.deactivated,
+.badge-status.cancelled {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}

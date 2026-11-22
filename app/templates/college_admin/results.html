@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Examination Results - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Institutional Examination Results & Transcripts</h3>
+            <p class="text-secondary small mb-0">Official performance records, automated evaluation summaries, and grade sheets.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Reg. Number</th>
+                        <th>Examination Title</th>
+                        <th>Subject</th>
+                        <th>Correct / Wrong</th>
+                        <th>Marks Obtained</th>
+                        <th>Percentage</th>
+                        <th>Result</th>
+                        <th class="text-end">Official PDF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in results %}
+                        <tr>
+                            <td class="fw-bold">{{ res.student.full_name }}</td>
+                            <td><span class="badge bg-light text-dark border font-monospace">{{ res.student.registration_number }}</span></td>
+                            <td>{{ res.examination.title }}</td>
+                            <td>{{ res.examination.subject.code }}</td>
+                            <td>
+                                <span class="text-success fw-bold">{{ res.correct_answers }}</span> /
+                                <span class="text-danger fw-bold">{{ res.wrong_answers }}</span>
+                            </td>
+                            <td><strong>{{ res.obtained_marks }}</strong> / {{ res.total_marks }}</td>
+                            <td><strong>{{ res.percentage }}%</strong></td>
+                            <td>
+                                {% if res.is_passed %}
+                                    <span class="badge bg-success">PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger">FAIL</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('results.download_pdf', result_id=res.id) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </a>
+                                <a href="{{ url_for('results.view_result', result_id=res.id) }}" class="btn btn-sm btn-outline-primary ms-1">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">No student evaluation records found yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

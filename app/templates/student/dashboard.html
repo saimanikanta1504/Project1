@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block title %}Student Examination Portal - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<!-- Institutional Subheader with Automatic College Identification -->
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="row align-items-center">
+            <div class="col-md-7 d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' + college.logo_filename) }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                     class="college-badge-logo me-3 shadow-sm" alt="College Crest">
+                <div>
+                    <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">WELCOME TO YOUR STUDENT PORTAL</div>
+                    <h3 class="institutional-title mb-1">{{ college.name }}</h3>
+                    <div class="institutional-meta">
+                        <span class="badge bg-primary me-2 font-monospace">INSTITUTION CODE: {{ college.code }}</span>
+                        <i class="bi bi-geo-alt me-1"></i> {{ college.address }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                <div class="bg-light border rounded p-2 text-start d-inline-block shadow-sm">
+                    <div class="small"><strong>Candidate:</strong> {{ student.full_name }}</div>
+                    <div class="small"><strong>Registration Number:</strong> <span class="font-monospace text-primary fw-bold">{{ student.registration_number }}</span></div>
+                    <div class="small"><strong>Program:</strong> {{ student.course.name }} ({{ student.course.code }})</div>
+                    <div class="small"><strong>Branch:</strong> {{ student.branch.name }} ({{ student.branch.code }}) &bull; Semester {{ student.semester }}</div>
+                    <div class="small"><strong>Academic Year:</strong> {{ student.academic_year }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 pb-5">
+    <!-- Stat Summary Tiles -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value text-primary">{{ exams_today|length }}</div>
+                <div class="stat-label">Available Today</div>
+                <small class="text-muted">Active examination window</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card stat-tile warning">
+                <div class="stat-value text-warning">{{ exams_tomorrow|length }}</div>
+                <div class="stat-label">Scheduled Tomorrow</div>
+                <small class="text-muted">Upcoming session</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card stat-tile success">
+                <div class="stat-value text-success">{{ total_completed }}</div>
+                <div class="stat-label">Completed Evaluations</div>
+                <small class="text-muted">Graded scorecards</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ avg_score }}%</div>
+                <div class="stat-label">Overall Average Score</div>
+                <small class="text-muted">Academic performance</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject & Course Selector Filter Bar -->
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('student.dashboard') }}" class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary mb-0">
+                        <i class="bi bi-funnel me-1"></i> Filter By Enrolled Subject:
+                    </label>
+                </div>
+                <div class="col-md-7">
+                    <select class="form-select form-select-sm" name="subject_id" onchange="this.form.submit()">
+                        <option value="">-- All Enrolled Subjects (Show All Examinations) --</option>
+                        {% for sub in enrolled_subjects %}
+                            <option value="{{ sub.id }}" {% if selected_subject_id == sub.id %}selected{% endif %}>
+                                {{ sub.code }} - {{ sub.name }} (Semester {{ sub.semester }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    {% if selected_subject_id %}
+                        <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100">
+                            Clear Filter
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Section 1: Available Examinations TODAY -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom">
+            <div>
+                <span class="badge bg-success me-2">ACTIVE SESSIONS</span>
+                <h5 class="fw-bold text-primary mb-0 d-inline-block align-middle">
+                    <i class="bi bi-calendar2-check-fill me-2 text-success"></i> Available Examinations Today ({{ today.strftime('%d-%b-%Y') }})
+                </h5>
+            </div>
+            <span class="badge bg-success">{{ exams_today|length }} Ready</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Examination Title</th>
+                        <th>Subject Paper</th>
+                        <th>Testing Window</th>
+                        <th>Duration</th>
+                        <th>Marks / Marking</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams_today %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ exam.title }}</strong>
+                                <div class="small text-muted">{{ exam.questions|length }} Multiple Choice Questions</div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ exam.subject.name }}</span>
+                                <span class="badge bg-light text-dark border font-monospace ms-1">{{ exam.subject.code }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ exam.start_time.strftime('%H:%M') }} - {{ exam.end_time.strftime('%H:%M') }}
+                                </span>
+                            </td>
+                            <td><strong>{{ exam.duration_minutes }}</strong> Minutes</td>
+                            <td>
+                                <div><strong>{{ exam.total_marks }}</strong> Total Points</div>
+                                <small class="{% if exam.negative_marking %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if exam.negative_marking %}Negative: -{{ exam.negative_mark_value }}{% else %}No negative marking{% endif %}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('examination.instructions', exam_id=exam.id) }}" class="btn btn-primary px-3 fw-semibold">
+                                    <i class="bi bi-pencil-square me-1"></i> Start Examination
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-check2-circle text-success fs-3 d-block mb-1"></i>
+                                No active examinations scheduled for today under the selected filter.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Scheduled Examinations TOMORROW & UPCOMING -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom">
+            <div>
+                <span class="badge bg-warning text-dark me-2">UPCOMING</span>
+                <h5 class="fw-bold text-dark mb-0 d-inline-block align-middle">
+                    <i class="bi bi-clock-history me-2 text-warning"></i> Scheduled Examinations Tomorrow ({{ tomorrow.strftime('%d-%b-%Y') }})
+                </h5>
+            </div>
+            <span class="badge bg-warning text-dark">{{ exams_tomorrow|length }} Scheduled</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Examination Title</th>
+                        <th>Subject Paper</th>
+                        <th>Scheduled Date</th>
+                        <th>Time Window</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams_tomorrow %}
+                        <tr>
+                            <td>
+                                <strong class="text-dark">{{ exam.title }}</strong>
+                                <div class="small text-muted">{{ exam.questions|length }} Questions</div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ exam.subject.name }}</span>
+                                <span class="badge bg-light text-dark border font-monospace ms-1">{{ exam.subject.code }}</span>
+                            </td>
+                            <td>{{ exam.exam_date.strftime('%d-%b-%Y') }}</td>
+                            <td>{{ exam.start_time.strftime('%H:%M') }} to {{ exam.end_time.strftime('%H:%M') }}</td>
+                            <td>{{ exam.duration_minutes }} Minutes</td>
+                            <td>
+                                <span class="badge bg-info text-dark">Opens Tomorrow</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No upcoming examinations scheduled for tomorrow.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 3: Completed Examinations / Scorecards -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom">
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="bi bi-trophy-fill me-2 text-primary"></i> Completed Examination Evaluations & Scorecards
+            </h5>
+            <span class="badge bg-secondary">{{ total_completed }} Evaluated</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Examination Title</th>
+                        <th>Subject</th>
+                        <th>Evaluation Date</th>
+                        <th>Questions (Correct/Wrong)</th>
+                        <th>Marks Obtained</th>
+                        <th>Percentage</th>
+                        <th>Result Status</th>
+                        <th class="text-end">Official Documents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in completed_results %}
+                        <tr>
+                            <td class="fw-bold">{{ res.examination.title }}</td>
+                            <td>{{ res.examination.subject.name }} ({{ res.examination.subject.code }})</td>
+                            <td class="small text-muted">{{ res.evaluated_at.strftime('%d-%b-%Y %H:%M') }}</td>
+                            <td>
+                                <span class="text-success fw-bold">{{ res.correct_answers }} Correct</span> /
+                                <span class="text-danger fw-bold">{{ res.wrong_answers }} Wrong</span>
+                            </td>
+                            <td><strong>{{ res.obtained_marks }}</strong> / {{ res.total_marks }}</td>
+                            <td><strong>{{ res.percentage }}%</strong></td>
+                            <td>
+                                {% if res.is_passed %}
+                                    <span class="badge bg-success">PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger">FAIL</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('results.download_pdf', result_id=res.id) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </a>
+                                <a href="{{ url_for('results.view_result', result_id=res.id) }}" class="btn btn-sm btn-outline-primary ms-1">
+                                    Scorecard
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">No completed examinations recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

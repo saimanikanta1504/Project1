@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Manage Questions: {{ exam.title }} - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Exam Master Header -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <div class="badge-status {{ exam.status }} mb-2 d-inline-block">{{ exam.status }}</div>
+                    <h4 class="fw-bold text-primary mb-1">{{ exam.title }}</h4>
+                    <p class="text-secondary small mb-0">
+                        {{ exam.course.code }} &bull; {{ exam.branch.code }} &bull; Sem {{ exam.semester }} &bull;
+                        <strong>Subject:</strong> {{ exam.subject.name }} ({{ exam.subject.code }}) &bull;
+                        <strong>Duration:</strong> {{ exam.duration_minutes }} Mins &bull;
+                        <strong>Total Questions:</strong> {{ exam.questions|length }} &bull;
+                        <strong>Total Marks:</strong> {{ exam.total_marks }} pts
+                    </p>
+                </div>
+                <div>
+                    {% if exam.status == 'draft' %}
+                        <form method="POST" action="{{ url_for('faculty.publish_exam', exam_id=exam.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success px-4 fw-semibold" {% if exam.questions|length == 0 %}disabled{% endif %} onclick="return confirm('Publish and activate this examination for students?');">
+                                <i class="bi bi-check2-circle me-1"></i> Publish & Activate Examination
+                            </button>
+                        </form>
+                    {% else %}
+                        <span class="badge bg-success p-2 fs-6"><i class="bi bi-check-circle me-1"></i> Examination Published</span>
+                    {% endif %}
+                    <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary ms-2">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Add Question Form -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <i class="bi bi-plus-circle me-1"></i> Add Question to Bank
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Question Stem / Text</label>
+                            <textarea class="form-control" name="question_text" rows="3" required placeholder="Enter the complete question problem or statement..."></textarea>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold text-muted">Marks Awarded</label>
+                                <input type="number" step="0.5" class="form-control" name="marks" value="1.0" min="0.5" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold text-muted">Negative Marks</label>
+                                <input type="number" step="0.05" class="form-control" name="negative_marks" value="{{ exam.negative_mark_value if exam.negative_marking else 0.0 }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted d-block">Multiple Choice Options (Select 1 Correct Answer)</label>
+
+                            <div class="input-group mb-2">
+                                <div class="input-group-text bg-white">
+                                    <input class="form-check-input mt-0" type="radio" name="correct_option" value="1" checked required title="Mark as correct answer">
+                                </div>
+                                <span class="input-group-text bg-light fw-bold">A</span>
+                                <input type="text" class="form-control" name="option_1" placeholder="Option A text" required>
+                            </div>
+
+                            <div class="input-group mb-2">
+                                <div class="input-group-text bg-white">
+                                    <input class="form-check-input mt-0" type="radio" name="correct_option" value="2" required title="Mark as correct answer">
+                                </div>
+                                <span class="input-group-text bg-light fw-bold">B</span>
+                                <input type="text" class="form-control" name="option_2" placeholder="Option B text" required>
+                            </div>
+
+                            <div class="input-group mb-2">
+                                <div class="input-group-text bg-white">
+                                    <input class="form-check-input mt-0" type="radio" name="correct_option" value="3" required title="Mark as correct answer">
+                                </div>
+                                <span class="input-group-text bg-light fw-bold">C</span>
+                                <input type="text" class="form-control" name="option_3" placeholder="Option C text" required>
+                            </div>
+
+                            <div class="input-group mb-2">
+                                <div class="input-group-text bg-white">
+                                    <input class="form-check-input mt-0" type="radio" name="correct_option" value="4" required title="Mark as correct answer">
+                                </div>
+                                <span class="input-group-text bg-light fw-bold">D</span>
+                                <input type="text" class="form-control" name="option_4" placeholder="Option D text" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Academic Explanation (Revealed post-exam)</label>
+                            <textarea class="form-control" name="explanation" rows="2" placeholder="Optional rationale behind the correct option..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                            <i class="bi bi-save me-1"></i> Add Question to Exam
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Bank List -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-journal-text me-2"></i> Current Question Bank ({{ exam.questions|length }})</span>
+                </div>
+                <div class="card-body p-3">
+                    {% for q in exam.questions %}
+                        <div class="border rounded p-3 mb-3 bg-white">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary me-2">Q{{ q.question_number }}</span>
+                                <div class="small text-muted me-auto fw-bold">{{ q.marks }} Mark(s) {% if q.negative_marks > 0 %}| Neg: -{{ q.negative_marks }}{% endif %}</div>
+                                <form method="POST" action="{{ url_for('faculty.delete_question', exam_id=exam.id, question_id=q.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="return confirm('Delete this question?');">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <p class="fw-semibold mb-2">{{ q.question_text }}</p>
+
+                            <div class="row g-2 mb-2">
+                                {% for opt in q.options %}
+                                    <div class="col-md-6">
+                                        <div class="p-2 border rounded small {% if opt.is_correct %}border-success bg-success-subtle fw-bold text-success{% else %}bg-light{% endif %}">
+                                            <span class="me-1">{{ chr(64 + opt.option_number) }}.</span>
+                                            {{ opt.option_text }}
+                                            {% if opt.is_correct %}
+                                                <i class="bi bi-check-circle-fill ms-1 text-success"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            {% if q.explanation %}
+                                <div class="small text-muted bg-light p-2 rounded mt-2">
+                                    <strong>Explanation:</strong> {{ q.explanation }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No questions added yet. Use the form on the left to add your first question.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Register Student - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-person-plus me-2"></i> Register New Student
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Registration / Roll Number</label>
+                                <input type="text" class="form-control text-uppercase" name="registration_number" required placeholder="e.g. 2025DAMBT11765">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Institutional Student Email</label>
+                                <input type="email" class="form-control" name="email" required placeholder="student@abccollege.edu">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">First Name</label>
+                                <input type="text" class="form-control" name="first_name" required placeholder="Sai">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Last Name</label>
+                                <input type="text" class="form-control" name="last_name" required placeholder="Kumar">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Course Program</label>
+                                <select class="form-select" name="course_id" required>
+                                    {% for c in courses %}
+                                        <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Branch / Discipline</label>
+                                <select class="form-select" name="branch_id" required>
+                                    {% for b in branches %}
+                                        <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold text-muted">Current Semester</label>
+                                <select class="form-select" name="semester" required>
+                                    {% for s in range(1, 9) %}
+                                        <option value="{{ s }}" {% if s == 3 %}selected{% endif %}>Semester {{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold text-muted">Academic Year</label>
+                                <input type="text" class="form-control" name="academic_year" value="2026-2027" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold text-muted">Contact Mobile</label>
+                                <input type="text" class="form-control" name="contact_number" placeholder="+91 9876543210">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold text-muted">Initial Password</label>
+                                <input type="password" class="form-control" name="password" required placeholder="Student portal access password">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{{ url_for('college_admin.students') }}" class="btn btn-outline-secondary px-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Student Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

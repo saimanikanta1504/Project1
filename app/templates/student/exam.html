@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}CBT Assessment: {{ exam.title }} - {{ student.registration_number }}{% endblock %}
+
+{% block content %}
+<!-- Examination CBT Top Bar -->
+<div class="exam-top-bar">
+    <div class="container-fluid px-lg-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' + college.logo_filename) }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                     class="bg-white rounded p-1 me-2" style="width: 36px; height: 36px; object-fit: contain;">
+                <div>
+                    <h5 class="mb-0 text-white fw-bold">{{ exam.title }}</h5>
+                    <small class="text-light" style="opacity: 0.85;">
+                        {{ college.name }} &bull; {{ exam.subject.name }} ({{ exam.subject.code }})
+                    </small>
+                </div>
+            </div>
+
+            <!-- Timer & Integrity Warning -->
+            <div class="d-flex align-items-center gap-3">
+                <span id="integrity-warning-badge" class="badge bg-danger py-2 px-3 d-none">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Integrity Alerts: 0
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small text-uppercase fw-semibold text-light">Time Remaining:</span>
+                    <div class="timer-box">
+                        <i class="bi bi-clock me-1"></i>
+                        <span id="timer-display">--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-4 py-3 flex-grow-1">
+    <div class="row g-3">
+        <!-- Main CBT Question Panel (Left) -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm border-0 h-100 d-flex flex-column">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <span id="current-q-number" class="fw-bold text-primary fs-6">Question 1</span>
+                    <span id="current-q-marks" class="badge bg-light text-dark border">1.0 Mark</span>
+                </div>
+
+                <div class="card-body p-4 flex-grow-1">
+                    <!-- Question Text -->
+                    <div id="current-q-text" class="fw-semibold text-dark fs-5 mb-4" style="line-height: 1.5;">
+                        Loading examination question...
+                    </div>
+
+                    <!-- Multiple Choice Options Container -->
+                    <div id="options-container" class="mb-4">
+                        <!-- Rendered dynamically by exam.js -->
+                    </div>
+                </div>
+
+                <!-- Action Toolbar -->
+                <div class="card-footer bg-white border-top p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <button type="button" id="btn-clear" class="btn btn-outline-secondary btn-sm me-2">
+                            <i class="bi bi-eraser me-1"></i> Clear Response
+                        </button>
+                        <button type="button" id="btn-review" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-flag me-1"></i> Mark for Review
+                        </button>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" id="btn-prev" class="btn btn-outline-primary px-3">
+                            <i class="bi bi-chevron-left me-1"></i> Previous
+                        </button>
+                        <button type="button" id="btn-save-next" class="btn btn-primary px-4 fw-semibold">
+                            Save & Next <i class="bi bi-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Palette & Candidate Dossier (Right) -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 h-100">
+                <!-- Candidate Info Card -->
+                <div class="card-body border-bottom p-3 bg-light">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-person-circle fs-3 text-primary me-2"></i>
+                        <div>
+                            <div class="fw-bold text-dark small">{{ student.full_name }}</div>
+                            <div class="font-monospace text-primary small fw-semibold">{{ student.registration_number }}</div>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block">{{ student.branch.code }} &bull; Semester {{ student.semester }}</small>
+                </div>
+
+                <!-- Palette Legend -->
+                <div class="p-3 border-bottom bg-white">
+                    <div class="small fw-bold text-muted mb-2 text-uppercase">Question Palette Legend</div>
+                    <div class="row g-2 small">
+                        <div class="col-6 d-flex align-items-center">
+                            <span class="d-inline-block rounded me-2" style="width: 14px; height: 14px; background-color: var(--success-color);"></span>
+                            <span>Answered</span>
+                        </div>
+                        <div class="col-6 d-flex align-items-center">
+                            <span class="d-inline-block rounded me-2" style="width: 14px; height: 14px; background-color: var(--warning-color);"></span>
+                            <span>Marked Review</span>
+                        </div>
+                        <div class="col-6 d-flex align-items-center">
+                            <span class="d-inline-block rounded me-2" style="width: 14px; height: 14px; background-color: #E2E8F0;"></span>
+                            <span>Unanswered</span>
+                        </div>
+                        <div class="col-6 d-flex align-items-center">
+                            <span class="d-inline-block rounded me-2 border border-primary" style="width: 14px; height: 14px; background-color: #FFFFFF;"></span>
+                            <span>Current</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Palette Numbers Grid -->
+                <div class="p-3 flex-grow-1">
+                    <div id="palette-grid" class="question-palette-grid">
+                        <!-- Rendered by exam.js -->
+                    </div>
+                </div>
+
+                <!-- Submit Exam Button -->
+                <div class="p-3 border-top bg-light">
+                    <button type="button" id="btn-submit-modal" class="btn btn-danger w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">
+                        <i class="bi bi-check2-circle me-1"></i> Submit Examination
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="submitModalLabel">
+                    <i class="bi bi-shield-check me-2"></i> Confirm Examination Submission
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-secondary mb-3">
+                    Are you certain you wish to conclude and submit your examination? Once submitted, your answers will be finalized and automatically evaluated.
+                </p>
+
+                <!-- Summary Breakdown Table -->
+                <table class="table table-bordered table-sm mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Status Metric</th>
+                            <th class="text-center">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total Examination Questions</td>
+                            <td class="text-center fw-bold" id="modal-total-q">0</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td>Answered Questions</td>
+                            <td class="text-center fw-bold text-success" id="modal-answered-q">0</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td>Marked for Review</td>
+                            <td class="text-center fw-bold text-warning" id="modal-review-q">0</td>
+                        </tr>
+                        <tr class="table-light">
+                            <td>Unanswered / Skipped Questions</td>
+                            <td class="text-center fw-bold text-muted" id="modal-unanswered-q">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-light border small text-muted mb-0">
+                    <i class="bi bi-info-circle text-primary me-1"></i>
+                    Results and official downloadable scorecards will be available immediately after submission.
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Resume Examination</button>
+                <form id="exam-submit-form" method="POST" action="{{ url_for('examination.submit_exam', attempt_id=attempt.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger fw-bold px-4">
+                        Confirm & Submit Now
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const examConfig = {
+        attemptId: {{ attempt.id }},
+        questions: {{ questions|tojson }},
+        remainingSeconds: {{ remaining_seconds }},
+        saveAnswerUrl: "{{ url_for('examination.save_answer', attempt_id=attempt.id) }}",
+        clearAnswerUrl: "{{ url_for('examination.clear_answer', attempt_id=attempt.id) }}",
+        logActivityUrl: "{{ url_for('examination.log_activity', attempt_id=attempt.id) }}",
+        submitExamUrl: "{{ url_for('examination.submit_exam', attempt_id=attempt.id) }}",
+        csrfToken: "{{ csrf_token() }}"
+    };
+
+    window.examEngine = new ExaminationEngine(examConfig);
+});
+</script>
+{% endblock %}

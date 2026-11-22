@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Demonstration Mode Management - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="fw-bold text-primary mb-1">Demonstration Mode & Data Management</h3>
+                <span class="badge bg-warning text-dark text-uppercase font-monospace px-2 py-1">DEMO ACTIVE</span>
+            </div>
+            <p class="text-secondary small mb-0">Monitor transient demonstration accounts, evaluate data isolation, and perform non-destructive cleanup.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('super_admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Overview Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ metrics.total_demo_users }}</div>
+                <div class="stat-label">Total Demo Accounts</div>
+                <small class="text-muted">{{ metrics.demo_students }} Students | {{ metrics.demo_faculty }} Faculty</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile success">
+                <div class="stat-value">{{ metrics.demo_colleges }}</div>
+                <div class="stat-label">Isolated Demo Tenants</div>
+                <small class="text-muted">Strict Logical Partitioning</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile warning">
+                <div class="stat-value">{{ metrics.demo_examinations }}</div>
+                <div class="stat-label">Demo Examinations</div>
+                <small class="text-muted">Interactive Evaluation Exs</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile danger">
+                <div class="stat-value">{{ metrics.demo_attempts }}</div>
+                <div class="stat-label">Demo Submissions</div>
+                <small class="text-muted">{{ metrics.demo_results }} Graded Results</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management & Cleanup Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-arrow-counterclockwise me-2 text-warning"></i> Reset Demo Examination Records
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Clears all candidate examination attempts, question answers, and evaluation results created under the Demo College. Allows conducting a completely fresh faculty demonstration session without existing test history.
+                    </p>
+                    <div class="alert alert-light border small text-muted">
+                        <i class="bi bi-shield-check text-success me-1"></i> Production Guarantee: Real college examination submissions and real student grades are never touched.
+                    </div>
+                    <form method="POST" action="{{ url_for('super_admin.demo_reset_exams') }}" onsubmit="return confirm('Reset all demo examination attempts? Real records will remain unaffected.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-warning fw-semibold btn-sm">
+                            <i class="bi bi-trash3 me-1"></i> Reset Demo Submissions & Scores
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-person-x me-2 text-danger"></i> Purge Transient Demo Accounts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Removes dynamic demo accounts generated during presentations while preserving the baseline evaluation cohort (Priya, Rahul, Ananya) and standard demo faculty examiner.
+                    </p>
+                    <div class="alert alert-light border small text-muted">
+                        <i class="bi bi-shield-check text-success me-1"></i> Production Guarantee: Only accounts with <code>is_demo = True</code> are eligible for cleanup.
+                    </div>
+                    <form method="POST" action="{{ url_for('super_admin.demo_clean_accounts') }}" onsubmit="return confirm('Purge transient demo accounts? Real accounts will not be affected.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger fw-semibold btn-sm">
+                            <i class="bi bi-person-dash me-1"></i> Purge Dynamic Demo Accounts
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Demo Accounts Ledger -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-primary">Active Demonstration Accounts</h5>
+            <span class="badge bg-secondary font-monospace">{{ metrics.users|length }} Accounts</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="small text-uppercase">Identifier</th>
+                        <th class="small text-uppercase">Email</th>
+                        <th class="small text-uppercase">Role</th>
+                        <th class="small text-uppercase">Tenant Isolation</th>
+                        <th class="small text-uppercase">Status</th>
+                        <th class="small text-uppercase">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in metrics.users %}
+                    <tr>
+                        <td class="font-monospace fw-bold">{{ u.identifier }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            <span class="badge {% if u.role == 'student' %}bg-primary{% elif u.role == 'faculty' %}bg-info text-dark{% elif u.role == 'college_admin' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                {{ u.role|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                {{ u.college.name if u.college else 'Unassigned' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                {{ u.registration_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary font-monospace">
+                                {{ u.account_type }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No demonstration accounts currently active in database.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Examination Instructions - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center">
+            <img src="{{ url_for('static', filename='uploads/' + college.logo_filename) }}"
+                 onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                 class="college-badge-logo me-3 shadow-sm" alt="College Crest">
+            <div>
+                <h4 class="institutional-title">{{ college.name }}</h4>
+                <div class="institutional-meta">
+                    Candidate: <strong>{{ student.full_name }}</strong> ({{ student.registration_number }}) &bull;
+                    {{ student.course.code }} &bull; {{ student.branch.code }} &bull; Sem {{ student.semester }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-file-earmark-text-fill me-2"></i> Computer-Based Test (CBT) Conduct & Instructions
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Key Exam Details Card -->
+                    <div class="row g-3 bg-light p-3 rounded border mb-4">
+                        <div class="col-md-6">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Examination Title</span>
+                            <span class="fw-bold text-primary fs-5">{{ exam.title }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Curriculum Subject</span>
+                            <span class="fw-bold text-dark">{{ exam.subject.name }} ({{ exam.subject.code }})</span>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Total Questions</span>
+                            <span class="fw-bold">{{ exam.questions|length }} MCQs</span>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Maximum Marks</span>
+                            <span class="fw-bold">{{ exam.total_marks }} Points</span>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Allocated Duration</span>
+                            <span class="fw-bold text-primary">{{ exam.duration_minutes }} Minutes</span>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Negative Marking</span>
+                            <span class="fw-bold {% if exam.negative_marking %}text-danger{% else %}text-success{% endif %}">
+                                {% if exam.negative_marking %}-{{ exam.negative_mark_value }} pts/wrong{% else %}Disabled{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- General Instructions -->
+                    <h6 class="fw-bold text-dark mb-3">General Academic Instructions:</h6>
+                    <div class="p-3 bg-white border rounded mb-4" style="line-height: 1.7; font-size: 0.93rem;">
+                        {{ exam.instructions or "1. This examination is delivered via a secure computer-based test interface.\n2. Each question has four choices with one single correct answer.\n3. The countdown timer is strictly monitored and synchronized with the server.\n4. Answers are saved automatically when selected or when clicking 'Save & Next'.\n5. Switching tabs or windows will trigger an academic integrity alert logged for faculty review.\n6. You may navigate between questions at any time using the Question Palette.\n7. When finished, click 'Submit Examination' or the exam will automatically submit when the timer reaches zero." }}
+                    </div>
+
+                    <!-- Integrity Warning Notice -->
+                    <div class="alert alert-warning border small text-dark mb-4">
+                        <i class="bi bi-shield-exclamation me-1 fs-5 align-middle"></i>
+                        <strong>Integrity Telemetry Active:</strong> The platform records focus changes, tab switches, and fullscreen changes. Please maintain your active browser tab until submission.
+                    </div>
+
+                    <!-- Acknowledgment Checkbox & Submission Form -->
+                    <form method="POST" action="{{ url_for('examination.start_exam', exam_id=exam.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="form-check p-3 bg-light border rounded mb-4">
+                            <input class="form-check-input ms-0 me-3" type="checkbox" id="acknowledgeCheck" required onchange="document.getElementById('startExamBtn').disabled = !this.checked;">
+                            <label class="form-check-label fw-semibold text-dark cursor-pointer" for="acknowledgeCheck">
+                                I have read and understood all the examination instructions and guidelines provided above. I agree to adhere strictly to the university examination code of conduct.
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2">
+                            <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary px-3">
+                                <i class="bi bi-arrow-left me-1"></i> Return to Portal
+                            </a>
+
+                            {% if in_progress %}
+                                <button type="submit" class="btn btn-warning btn-lg px-4 fw-bold">
+                                    <i class="bi bi-play-circle-fill me-1"></i> Resume In-Progress Examination
+                                </button>
+                            {% else %}
+                                <button type="submit" id="startExamBtn" class="btn btn-primary btn-lg px-4 fw-bold" disabled>
+                                    <i class="bi bi-pencil-square me-1"></i> Start Examination Now
+                                </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

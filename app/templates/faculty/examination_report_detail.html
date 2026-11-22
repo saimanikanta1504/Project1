@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.title }} - Performance & Attendance Report{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' + exam.college.logo_filename) }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                     class="college-badge-logo me-3 shadow-sm" alt="College Logo">
+                <div>
+                    <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">EXAMINATION REPORT & AUDIT</div>
+                    <h3 class="institutional-title mb-1">{{ exam.title }}</h3>
+                    <div class="institutional-meta">
+                        <span class="badge bg-primary font-monospace me-2">{{ exam.subject.code }} - {{ exam.subject.name }}</span>
+                        {{ exam.course.name }} &bull; {{ exam.branch.name }} &bull; Semester {{ exam.semester }} &bull;
+                        <i class="bi bi-calendar-event ms-1 me-1"></i> {{ exam.exam_date.strftime('%d-%b-%Y') }}
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('faculty.reports_index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Reports
+                </a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle fw-semibold" data-bs-toggle="dropdown">
+                        <i class="bi bi-download me-1"></i> Export & Reports
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><h6 class="dropdown-header text-uppercase small">Official PDF Documents</h6></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('faculty.download_attendance', exam_id=exam.id) }}">
+                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Download Attendance Report (PDF)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('faculty.download_marks', exam_id=exam.id) }}">
+                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Download Marks Report (PDF)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('faculty.download_complete_report', exam_id=exam.id) }}">
+                                <i class="bi bi-file-earmark-text me-2 text-primary"></i> Download Complete Exam Report (PDF)
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header text-uppercase small">Spreadsheet Data</h6></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('faculty.export_csv', exam_id=exam.id) }}">
+                                <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i> Export Results to Excel / CSV
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 pb-5">
+
+    <!-- Performance & Attendance Overview Tiles -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value text-primary">{{ summary_stats.total_registered }}</div>
+                <div class="stat-label">Total Registered</div>
+                <small class="text-muted">Eligible candidates</small>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stat-tile success">
+                <div class="stat-value text-success">{{ summary_stats.present_count }}</div>
+                <div class="stat-label">Total Present</div>
+                <small class="text-muted">{{ summary_stats.attendance_percentage }}% attendance rate</small>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stat-tile danger">
+                <div class="stat-value text-danger">{{ summary_stats.absent_count }}</div>
+                <div class="stat-label">Total Absent</div>
+                <small class="text-muted">Window closed absentees</small>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value text-dark">{{ summary_stats.highest_marks }}</div>
+                <div class="stat-label">Highest Score</div>
+                <small class="text-muted">Lowest: {{ summary_stats.lowest_marks }}</small>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value text-secondary">{{ summary_stats.average_marks }}</div>
+                <div class="stat-label">Average Score</div>
+                <small class="text-muted">Out of {{ exam.total_marks }} Pts</small>
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+            <div class="card stat-tile success">
+                <div class="stat-value text-success">{{ summary_stats.pass_percentage }}%</div>
+                <div class="stat-label">Pass Percentage</div>
+                <small class="text-muted">Fail: {{ summary_stats.fail_percentage }}%</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Analytics: Chart.js Visualizations -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-pie-chart-fill me-1"></i> A. Attendance Distribution
+                    </h6>
+                </div>
+                <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+                    <div style="width: 100%; max-width: 250px; height: 230px;">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-center small text-secondary">
+                        <span class="me-3"><i class="bi bi-circle-fill text-success me-1"></i> Present: {{ summary_stats.present_count }}</span>
+                        <span class="me-3"><i class="bi bi-circle-fill text-danger me-1"></i> Absent: {{ summary_stats.absent_count }}</span>
+                        {% if summary_stats.in_progress_count > 0 %}
+                            <span><i class="bi bi-circle-fill text-warning me-1"></i> In Progress: {{ summary_stats.in_progress_count }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-bar-chart-fill me-1"></i> B. Marks Score Distribution
+                    </h6>
+                </div>
+                <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+                    <div style="width: 100%; height: 230px;">
+                        <canvas id="marksDistributionChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-center small text-secondary">
+                        Candidate count across score intervals (Max: {{ exam.total_marks }} Pts)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-12">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-pie-chart me-1"></i> C. Pass vs Fail Distribution
+                    </h6>
+                </div>
+                <div class="card-body p-3 d-flex flex-column align-items-center justify-content-center">
+                    <div style="width: 100%; max-width: 250px; height: 230px;">
+                        <canvas id="passFailChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-center small text-secondary">
+                        <span class="me-3"><i class="bi bi-check-circle-fill text-success me-1"></i> Passed: {{ summary_stats.pass_count }} ({{ summary_stats.pass_percentage }}%)</span>
+                        <span><i class="bi bi-x-circle-fill text-danger me-1"></i> Failed: {{ summary_stats.fail_count }} ({{ summary_stats.fail_percentage }}%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Examination Attendance Management -->
+    <div class="card shadow-sm border-0 mb-4 bg-white" id="attendance-section">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-calendar2-check-fill me-2 text-success"></i> Candidate Attendance Management Ledger
+                </h5>
+                <small class="text-secondary">Track attendance status calculated from actual start and submission attempts.</small>
+            </div>
+            <div>
+                <a href="{{ url_for('faculty.download_attendance', exam_id=exam.id) }}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Export Attendance (PDF)
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Controls for Attendance Table -->
+        <div class="card-body border-bottom bg-light py-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="attendanceSearch" class="form-control" placeholder="Search by Roll Number or Student Name...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="branchFilter" class="form-select form-select-sm">
+                        <option value="">-- All Branches --</option>
+                        {% for b in branches %}
+                            <option value="{{ b }}">{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="statusFilter" class="form-select form-select-sm">
+                        <option value="">-- All Attendance Statuses --</option>
+                        <option value="Present">Present (Attended / Submitted)</option>
+                        <option value="Absent">Absent (Not Attempted)</option>
+                        <option value="In Progress">In Progress (Active Session)</option>
+                        <option value="Pending">Pending (Window Open)</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="resetAttendanceFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle mb-0 table-hover" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">S.No</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Branch</th>
+                        <th>Session Start / Submit Time</th>
+                        <th>Attendance Status</th>
+                        <th class="text-end">Record Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in attendance_records %}
+                        {% set st = item.student %}
+                        {% set att = item.attempt %}
+                        <tr class="attendance-row"
+                            data-roll="{{ st.registration_number|lower }}"
+                            data-name="{{ st.full_name|lower }}"
+                            data-branch="{{ st.branch.code }}"
+                            data-status="{{ item.status }}">
+                            <td class="text-muted">{{ item.s_no }}</td>
+                            <td><strong class="font-monospace text-primary">{{ st.registration_number }}</strong></td>
+                            <td class="fw-semibold">{{ st.full_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ st.branch.code }}</span></td>
+                            <td class="small text-muted">
+                                {% if att and att.start_time %}
+                                    {{ att.start_time.strftime('%H:%M:%S') }}
+                                    {% if att.end_time %}
+                                        to {{ att.end_time.strftime('%H:%M:%S') }}
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">No attempt recorded</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {{ item.badge_class }} px-2 py-1">
+                                    {{ item.status }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                {% if item.result %}
+                                    <a href="{{ url_for('faculty.student_performance_detail', exam_id=exam.id, student_id=st.id) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i> View Performance
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">No evaluation</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No eligible students registered for this examination.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Student Marks & Ranking Management -->
+    <div class="card shadow-sm border-0 bg-white" id="marks-section">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h5 class="fw-bold text-primary mb-0">
+                    <i class="bi bi-trophy-fill me-2 text-warning"></i> Student Marks, Evaluation & Standard Competition Ranking
+                </h5>
+                <small class="text-secondary">Competition ranking (1224) evaluated strictly for eligible students of this examination.</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('faculty.download_marks', exam_id=exam.id) }}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Marks PDF
+                </a>
+                <a href="{{ url_for('faculty.export_csv', exam_id=exam.id) }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Controls for Marks Table -->
+        <div class="card-body border-bottom bg-light py-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="marksSearch" class="form-control" placeholder="Search by Roll Number or Student Name in merit list...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="resultFilter" class="form-select form-select-sm">
+                        <option value="">-- All Results (Pass & Fail) --</option>
+                        <option value="PASS">Pass Only</option>
+                        <option value="FAIL">Fail Only</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="marksBranchFilter" class="form-select form-select-sm">
+                        <option value="">-- All Branches --</option>
+                        {% for b in branches %}
+                            <option value="{{ b }}">{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="resetMarksFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle mb-0 table-hover" id="marksTable">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Branch</th>
+                        <th>Marks Obtained</th>
+                        <th>Total Marks</th>
+                        <th>Percentage</th>
+                        <th>Correct / Wrong / Skipped</th>
+                        <th>Result</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in ranked_results %}
+                        {% set st = res.student %}
+                        <tr class="marks-row"
+                            data-roll="{{ st.registration_number|lower }}"
+                            data-name="{{ st.full_name|lower }}"
+                            data-branch="{{ st.branch.code }}"
+                            data-result="{% if res.is_passed %}PASS{% else %}FAIL{% endif %}">
+                            <td>
+                                <span class="badge {% if res.competition_rank == 1 %}bg-warning text-dark{% elif res.competition_rank in [2, 3] %}bg-primary{% else %}bg-secondary{% endif %} fs-6 font-monospace">
+                                    #{{ res.competition_rank }}
+                                </span>
+                            </td>
+                            <td><strong class="font-monospace text-primary">{{ st.registration_number }}</strong></td>
+                            <td class="fw-semibold">{{ st.full_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ st.branch.code }}</span></td>
+                            <td><strong class="fs-6 text-dark">{{ res.obtained_marks }}</strong></td>
+                            <td class="text-muted">{{ res.total_marks }}</td>
+                            <td><strong>{{ res.percentage }}%</strong></td>
+                            <td class="small">
+                                <span class="text-success fw-bold">{{ res.correct_answers }}C</span> &bull;
+                                <span class="text-danger fw-bold">{{ res.wrong_answers }}W</span> &bull;
+                                <span class="text-muted">{{ res.unanswered_questions }}S</span>
+                            </td>
+                            <td>
+                                {% if res.is_passed %}
+                                    <span class="badge bg-success px-2 py-1">PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger px-2 py-1">FAIL</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('faculty.student_performance_detail', exam_id=exam.id, student_id=st.id) }}"
+                                   class="btn btn-sm btn-primary fw-semibold">
+                                    <i class="bi bi-file-earmark-person me-1"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                <i class="bi bi-hourglass-split fs-2 d-block mb-2 text-secondary"></i>
+                                No finalized examination results available yet. Results appear immediately after students complete and submit their examinations.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live Client-Side Filters for Attendance Ledger
+    const attendanceSearch = document.getElementById('attendanceSearch');
+    const branchFilter = document.getElementById('branchFilter');
+    const statusFilter = document.getElementById('statusFilter');
+
+    function applyAttendanceFilters() {
+        const query = attendanceSearch.value.trim().toLowerCase();
+        const branch = branchFilter.value;
+        const status = statusFilter.value;
+
+        document.querySelectorAll('.attendance-row').forEach(row => {
+            const roll = row.getAttribute('data-roll');
+            const name = row.getAttribute('data-name');
+            const rowBranch = row.getAttribute('data-branch');
+            const rowStatus = row.getAttribute('data-status');
+
+            const matchesQuery = !query || roll.includes(query) || name.includes(query);
+            const matchesBranch = !branch || rowBranch === branch;
+            const matchesStatus = !status || rowStatus === status;
+
+            row.style.display = (matchesQuery && matchesBranch && matchesStatus) ? '' : 'none';
+        });
+    }
+
+    if (attendanceSearch) attendanceSearch.addEventListener('input', applyAttendanceFilters);
+    if (branchFilter) branchFilter.addEventListener('change', applyAttendanceFilters);
+    if (statusFilter) statusFilter.addEventListener('change', applyAttendanceFilters);
+
+    function resetAttendanceFilters() {
+        if (attendanceSearch) attendanceSearch.value = '';
+        if (branchFilter) branchFilter.value = '';
+        if (statusFilter) statusFilter.value = '';
+        applyAttendanceFilters();
+    }
+
+    // Live Client-Side Filters for Ranked Marks Table
+    const marksSearch = document.getElementById('marksSearch');
+    const resultFilter = document.getElementById('resultFilter');
+    const marksBranchFilter = document.getElementById('marksBranchFilter');
+
+    function applyMarksFilters() {
+        const query = marksSearch.value.trim().toLowerCase();
+        const resFilter = resultFilter.value;
+        const branch = marksBranchFilter.value;
+
+        document.querySelectorAll('.marks-row').forEach(row => {
+            const roll = row.getAttribute('data-roll');
+            const name = row.getAttribute('data-name');
+            const rowBranch = row.getAttribute('data-branch');
+            const rowResult = row.getAttribute('data-result');
+
+            const matchesQuery = !query || roll.includes(query) || name.includes(query);
+            const matchesResult = !resFilter || rowResult === resFilter;
+            const matchesBranch = !branch || rowBranch === branch;
+
+            row.style.display = (matchesQuery && matchesResult && matchesBranch) ? '' : 'none';
+        });
+    }
+
+    if (marksSearch) marksSearch.addEventListener('input', applyMarksFilters);
+    if (resultFilter) resultFilter.addEventListener('change', applyMarksFilters);
+    if (marksBranchFilter) marksBranchFilter.addEventListener('change', applyMarksFilters);
+
+    function resetMarksFilters() {
+        if (marksSearch) marksSearch.value = '';
+        if (resultFilter) resultFilter.value = '';
+        if (marksBranchFilter) marksBranchFilter.value = '';
+        applyMarksFilters();
+    }
+
+    // Chart.js Visualizations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart A: Attendance Distribution
+        const ctxAtt = document.getElementById('attendanceChart');
+        if (ctxAtt) {
+            new Chart(ctxAtt, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present', 'Absent', 'In Progress'],
+                    datasets: [{
+                        data: [
+                            {{ summary_stats.present_count }},
+                            {{ summary_stats.absent_count }},
+                            {{ summary_stats.in_progress_count }}
+                        ],
+                        backgroundColor: ['#218653', '#D64545', '#D99A25'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Chart B: Marks Distribution
+        const ctxMarks = document.getElementById('marksDistributionChart');
+        if (ctxMarks) {
+            new Chart(ctxMarks, {
+                type: 'bar',
+                data: {
+                    labels: {{ bucket_labels|tojson }},
+                    datasets: [{
+                        label: 'Candidates',
+                        data: {{ bucket_counts|tojson }},
+                        backgroundColor: '#163B65',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Chart C: Pass vs Fail Distribution
+        const ctxPF = document.getElementById('passFailChart');
+        if (ctxPF) {
+            new Chart(ctxPF, {
+                type: 'pie',
+                data: {
+                    labels: ['Pass', 'Fail'],
+                    datasets: [{
+                        data: [
+                            {{ summary_stats.pass_count }},
+                            {{ summary_stats.fail_count }}
+                        ],
+                        backgroundColor: ['#218653', '#D64545'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

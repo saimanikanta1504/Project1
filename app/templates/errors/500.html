@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Server Error (500) - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-5">
+                <div class="display-1 text-warning font-monospace fw-bold mb-3">500</div>
+                <h3 class="fw-bold mb-3">Internal System Error</h3>
+                <p class="text-secondary mb-4">
+                    An unexpected server-side error occurred while processing the examination or institutional request. Technical logs have captured this incident.
+                </p>
+                <div>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary px-4 py-2">Return to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

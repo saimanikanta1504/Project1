@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Enrolled Subjects - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center">
+            <img src="{{ url_for('static', filename='uploads/' + college.logo_filename) }}"
+                 onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                 class="college-badge-logo me-3 shadow-sm" alt="College Crest">
+            <div>
+                <h4 class="institutional-title">{{ college.name }}</h4>
+                <div class="institutional-meta">
+                    <strong>{{ student.course.name }} ({{ student.course.code }})</strong> &bull;
+                    Branch: {{ student.branch.name }} ({{ student.branch.code }}) &bull;
+                    Semester {{ student.semester }} &bull; {{ student.academic_year }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 py-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="bi bi-journal-bookmark-fill me-2"></i> Semester {{ student.semester }} Prescribed Curriculum Subjects
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Program</th>
+                        <th>Branch</th>
+                        <th>Semester</th>
+                        <th>Academic Session</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subjects %}
+                        <tr>
+                            <td><span class="badge bg-light text-dark border font-monospace fs-6">{{ sub.code }}</span></td>
+                            <td class="fw-bold text-primary">{{ sub.name }}</td>
+                            <td>{{ sub.course.code }}</td>
+                            <td>{{ sub.branch.code }}</td>
+                            <td><span class="badge bg-primary">Semester {{ sub.semester }}</span></td>
+                            <td class="small text-muted">{{ sub.academic_year }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No subjects configured for your current semester curriculum.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

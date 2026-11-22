@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Manage Students - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Student Enrollment Directory</h3>
+            <p class="text-secondary small mb-0">Roster of registered students belonging exclusively to your institution.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('college_admin.new_student') }}" class="btn btn-primary btn-sm px-3">
+                <i class="bi bi-person-plus me-1"></i> Register New Student
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Registration No.</th>
+                        <th>Student Full Name</th>
+                        <th>Program / Course</th>
+                        <th>Branch</th>
+                        <th>Semester</th>
+                        <th>Academic Year</th>
+                        <th>Contact Email</th>
+                        <th>Account Status</th>
+                        <th class="text-end">Verification & Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in students %}
+                        <tr>
+                            <td><strong class="font-monospace text-primary">{{ st.registration_number }}</strong></td>
+                            <td class="fw-semibold">{{ st.full_name }}</td>
+                            <td>{{ st.course.code }}</td>
+                            <td>{{ st.branch.code }}</td>
+                            <td><span class="badge bg-light text-dark border">Sem {{ st.semester }}</span></td>
+                            <td class="small text-muted">{{ st.academic_year }}</td>
+                            <td class="small">{{ st.user.email }}</td>
+                            <td>
+                                {% set status = st.user.registration_status if st.user else st.registration_status %}
+                                {% if status in ['active', 'approved'] %}
+                                    <span class="badge bg-success">Active / Approved</span>
+                                {% elif status in ['pending_verification', 'pending_approval'] %}
+                                    <span class="badge bg-warning text-dark">Pending Verification</span>
+                                {% elif status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Deactivated</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if st.user and st.user.registration_status in ['pending_verification', 'pending_approval'] %}
+                                    <form method="POST" action="{{ url_for('college_admin.approve_student', student_id=st.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success py-0 px-2 fw-semibold" title="Approve Student Account">
+                                            <i class="bi bi-check-lg me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('college_admin.reject_student', student_id=st.id) }}" class="d-inline ms-1">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Reject Registration">
+                                            <i class="bi bi-x-lg me-1"></i> Reject
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted small"><i class="bi bi-shield-check text-success me-1"></i> Verified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">No students currently enrolled in this college.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

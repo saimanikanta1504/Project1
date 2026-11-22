@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Add Faculty Member - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold text-primary mb-0">
+                        <i class="bi bi-person-badge me-2"></i> Register Faculty Member
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Faculty ID Code</label>
+                                <input type="text" class="form-control text-uppercase" name="faculty_id_code" required placeholder="e.g. FAC-ABC-01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Institutional Email</label>
+                                <input type="email" class="form-control" name="email" required placeholder="faculty@abccollege.edu">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">First Name</label>
+                                <input type="text" class="form-control" name="first_name" required placeholder="Prof. Anita">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Last Name</label>
+                                <input type="text" class="form-control" name="last_name" required placeholder="Sharma">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Department</label>
+                                <input type="text" class="form-control" name="department_name" required placeholder="Computer Science & Engineering">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Designation</label>
+                                <input type="text" class="form-control" name="designation" value="Assistant Professor" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Contact Telephone</label>
+                                <input type="text" class="form-control" name="contact_number" placeholder="+91 9876543211">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">Initial Portal Password</label>
+                                <input type="password" class="form-control" name="password" required placeholder="Confidential faculty password">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="{{ url_for('college_admin.faculty') }}" class="btn btn-outline-secondary px-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">Save Faculty Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

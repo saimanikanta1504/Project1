@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Examination Scorecard: {{ exam.title }} - {{ student.registration_number }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='uploads/' + college.logo_filename) }}"
+                     onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                     class="college-badge-logo me-3 shadow-sm" alt="College Crest">
+                <div>
+                    <h4 class="institutional-title">{{ college.name }}</h4>
+                    <div class="institutional-meta">
+                        <span class="badge bg-primary me-2 font-monospace">CODE: {{ college.code }}</span>
+                        {{ college.address }}
+                    </div>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('results.download_pdf', result_id=result.id) }}" class="btn btn-danger px-3 me-2 fw-semibold">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Download Official PDF Scorecard
+                </a>
+                <a href="{{ url_for('student.dashboard') if current_user.is_student else url_for('faculty.dashboard') }}" class="btn btn-outline-secondary">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Scorecard Summary Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="bi bi-card-checklist me-2"></i> Official Examination Performance Transcript
+            </h5>
+            <span class="badge bg-light text-muted border font-monospace">
+                Attempt Reference: #{{ attempt.id }}
+            </span>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Candidate & Exam Metadata Grid -->
+            <div class="row g-3 bg-light p-3 rounded border mb-4">
+                <div class="col-md-4">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Candidate Name</span>
+                    <span class="fw-bold text-dark fs-6">{{ student.full_name }}</span>
+                </div>
+                <div class="col-md-4">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Registration Number</span>
+                    <span class="fw-bold text-primary font-monospace fs-6">{{ student.registration_number }}</span>
+                </div>
+                <div class="col-md-4">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Program & Branch</span>
+                    <span class="fw-bold">{{ student.course.code }} &bull; {{ student.branch.code }} (Sem {{ student.semester }})</span>
+                </div>
+                <div class="col-md-4">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Examination Title</span>
+                    <span class="fw-bold text-dark">{{ exam.title }}</span>
+                </div>
+                <div class="col-md-4">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Curriculum Subject</span>
+                    <span class="fw-bold">{{ exam.subject.name }} ({{ exam.subject.code }})</span>
+                </div>
+                <div class="col-md-4">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Evaluation Timestamp</span>
+                    <span class="text-secondary small">{{ result.evaluated_at.strftime('%d-%b-%Y %H:%M:%S UTC') }}</span>
+                </div>
+            </div>
+
+            <!-- Quantitative Marks Breakdown Grid -->
+            <div class="row g-3 text-center mb-4">
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-3 bg-white">
+                        <div class="display-6 fw-bold text-primary">{{ result.total_questions }}</div>
+                        <div class="small text-muted text-uppercase fw-semibold mt-1">Total Questions</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-3 bg-white">
+                        <div class="display-6 fw-bold text-success">{{ result.correct_answers }}</div>
+                        <div class="small text-muted text-uppercase fw-semibold mt-1">Correct</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-3 bg-white">
+                        <div class="display-6 fw-bold text-danger">{{ result.wrong_answers }}</div>
+                        <div class="small text-muted text-uppercase fw-semibold mt-1">Incorrect</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-3 bg-white">
+                        <div class="display-6 fw-bold text-secondary">{{ result.unanswered_questions }}</div>
+                        <div class="small text-muted text-uppercase fw-semibold mt-1">Unanswered</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-3 bg-white">
+                        <div class="display-6 fw-bold text-primary">{{ result.obtained_marks }} <span class="fs-6 text-muted">/ {{ result.total_marks }}</span></div>
+                        <div class="small text-muted text-uppercase fw-semibold mt-1">Score Obtained</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-3 bg-white">
+                        <div class="display-6 fw-bold text-primary">{{ result.percentage }}%</div>
+                        <div class="small text-muted text-uppercase fw-semibold mt-1">Percentage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Result Outcome Banner -->
+            <div class="p-3 rounded border d-flex justify-content-between align-items-center {% if result.is_passed %}bg-success-subtle border-success{% else %}bg-danger-subtle border-danger{% endif %} mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1 {% if result.is_passed %}text-success{% else %}text-danger{% endif %}">
+                        {% if result.is_passed %}
+                            <i class="bi bi-patch-check-fill me-2"></i> EXAMINATION RESULT: PASS
+                        {% else %}
+                            <i class="bi bi-x-circle-fill me-2"></i> EXAMINATION RESULT: FAIL
+                        {% endif %}
+                    </h5>
+                    <small class="text-secondary">Qualifying threshold configured for this examination: {{ exam.passing_percentage }}%</small>
+                </div>
+                <div class="text-end">
+                    <a href="{{ url_for('results.download_pdf', result_id=result.id) }}" class="btn btn-outline-dark btn-sm">
+                        <i class="bi bi-printer me-1"></i> Print / Download Scorecard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Question-by-Question Detailed Review -->
+            <h5 class="fw-bold text-primary mb-3 mt-4">
+                <i class="bi bi-list-check me-2"></i> Question-by-Question Review & Explanations
+            </h5>
+
+            {% for item in review_data %}
+                <div class="border rounded p-3 mb-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge {% if item.is_user_correct %}bg-success{% elif item.is_unanswered %}bg-secondary{% else %}bg-danger{% endif %} me-2">
+                            Question {{ item.question.question_number }}
+                        </span>
+                        <div class="small">
+                            {% if item.is_user_correct %}
+                                <span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Correct (+{{ item.question.marks }} pts)</span>
+                            {% elif item.is_unanswered %}
+                                <span class="text-muted"><i class="bi bi-dash-circle me-1"></i> Unanswered (0 pts)</span>
+                            {% else %}
+                                <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-1"></i> Incorrect {% if exam.negative_marking %}(-{{ item.question.negative_marks or exam.negative_mark_value }} pts){% endif %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <p class="fw-semibold text-dark mb-3">{{ item.question.question_text }}</p>
+
+                    <div class="row g-2 mb-2">
+                        {% for opt in item.question.options %}
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded small
+                                    {% if opt.is_correct %}
+                                        border-success bg-success-subtle text-success fw-bold
+                                    {% elif item.selected_option and item.selected_option.id == opt.id and not opt.is_correct %}
+                                        border-danger bg-danger-subtle text-danger fw-bold
+                                    {% else %}
+                                        bg-light text-secondary
+                                    {% endif %}">
+                                    <span class="me-1">{{ chr(64 + opt.option_number) }}.</span>
+                                    {{ opt.option_text }}
+                                    {% if opt.is_correct %}
+                                        <i class="bi bi-check-circle-fill ms-1 text-success" title="Correct Option"></i>
+                                    {% endif %}
+                                    {% if item.selected_option and item.selected_option.id == opt.id and not opt.is_correct %}
+                                        <i class="bi bi-x-circle-fill ms-1 text-danger" title="Your Selection"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if item.question.explanation %}
+                        <div class="small text-muted bg-light p-2 rounded mt-2 border">
+                            <strong>Faculty Rationale:</strong> {{ item.question.explanation }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

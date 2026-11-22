@@ -1,0 +1,1116 @@
+{% extends "base.html" %}
+{% block title %}Centralized Examination Portal - Authentication{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-11 col-lg-12">
+            <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 14px;">
+                <div class="row g-0">
+                    <!-- LEFT SIDE: University System Visual & Branding Panel -->
+                    <div class="col-lg-5 d-flex flex-column justify-content-between p-4 p-md-5 text-white"
+                         style="background: linear-gradient(145deg, #163B65 0%, #1e4b82 100%);">
+                        <div>
+                            <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 rounded-3 p-3 mb-4 shadow-sm border border-white border-opacity-25">
+                                <i class="bi bi-mortarboard-fill text-white fs-1"></i>
+                            </div>
+                            <h3 class="fw-bold mb-2" style="letter-spacing: -0.5px;">{{ platform_name }}</h3>
+                            <div class="badge bg-light text-primary fw-semibold px-2 py-1 mb-3 text-uppercase font-monospace" style="font-size: 0.75rem;">
+                                Multi-College Academic Architecture
+                            </div>
+                            <p class="text-white-50 small mb-4" style="line-height: 1.6;">
+                                An enterprise-grade, multi-tenant online examination management platform providing secure role-based access for Students, Faculty Members, and Academic Administrators.
+                            </p>
+
+                            <div class="d-flex flex-column gap-3 mb-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white bg-opacity-20 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-shield-lock-fill text-white"></i>
+                                    </div>
+                                    <div class="small">
+                                        <div class="fw-bold text-white">Multi-Role Isolated Portals</div>
+                                        <div class="text-white-50" style="font-size: 0.78rem;">Dedicated dashboards for Student, Faculty & Admin</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white bg-opacity-20 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-building-check text-white"></i>
+                                    </div>
+                                    <div class="small">
+                                        <div class="fw-bold text-white">Multi-College Tenancy</div>
+                                        <div class="text-white-50" style="font-size: 0.78rem;">Autonomous institutional isolation & domains</div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white bg-opacity-20 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-lightning-charge-fill text-warning"></i>
+                                    </div>
+                                    <div class="small">
+                                        <div class="fw-bold text-white">Demonstration Sandbox Ready</div>
+                                        <div class="text-white-50" style="font-size: 0.78rem;">Instant evaluation mode with complete real-time features</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-top border-white border-opacity-10 small text-white-50">
+                            <i class="bi bi-patch-check-fill text-warning me-1"></i> ISO 27001 Logical Multi-Tenant Separation Active
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDE: Multi-Role Authentication Interface -->
+                    <div class="col-lg-7 p-4 p-md-5 bg-white d-flex flex-column justify-content-center">
+                        
+                        <!-- OPTIONAL DEMO MODE SWITCHER (Visible when DEMO_MODE_ENABLED=True) -->
+                        {% if demo_mode_enabled %}
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-1 rounded-3 bg-light border auth-mode-bar">
+                                <button type="button" id="btn-mode-normal"
+                                        class="btn btn-sm w-50 auth-mode-btn {% if auth_mode != 'demo' %}active btn-primary shadow-sm{% else %}btn-light text-secondary{% endif %}"
+                                        onclick="switchAuthMode('normal')">
+                                    <i class="bi bi-shield-lock me-1"></i> Normal Login
+                                </button>
+                                <button type="button" id="btn-mode-demo"
+                                        class="btn btn-sm w-50 auth-mode-btn {% if auth_mode == 'demo' %}active btn-warning text-dark shadow-sm fw-bold{% else %}btn-light text-secondary{% endif %}"
+                                        onclick="switchAuthMode('demo')">
+                                    <i class="bi bi-lightning-charge-fill me-1 text-warning"></i> Demo Login
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Demonstration Mode Status Banner -->
+                        <div id="demo-mode-banner" class="alert alert-warning border border-warning-subtle py-2 px-3 small mb-3 {% if auth_mode != 'demo' %}d-none{% endif %}">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-dark text-warning text-uppercase font-monospace me-2 px-2 py-1">DEMONSTRATION MODE</span>
+                                    <span class="text-dark small">Instant demonstration active: Enter arbitrary evaluation credentials. Real university records remain isolated.</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- SCREEN 1: CATEGORY SELECTION (Visible when no category is chosen) -->
+                        <div id="screen-category-selection" class="{% if selected_role %}d-none{% endif %}">
+                            <div class="mb-4">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 text-uppercase fw-semibold mb-2" style="font-size: 0.75rem;">
+                                    Unified Authentication Gateway
+                                </span>
+                                <h3 class="fw-bold text-primary mb-1">Welcome to the Online Examination System</h3>
+                                <p class="text-secondary small mb-0">Choose your account type below to proceed to Sign Up or Login.</p>
+                            </div>
+
+                            <div class="d-flex flex-column gap-3 mb-4">
+                                <!-- Option 1: Student -->
+                                <div class="card border border-2 role-selector-card p-3 shadow-sm hover-shadow"
+                                     style="cursor: pointer; transition: all 0.2s ease;"
+                                     onclick="selectCategory('student')">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-3 bg-primary bg-opacity-10 text-primary p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                                <i class="bi bi-mortarboard-fill fs-3"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="fw-bold text-dark mb-1">Student</h5>
+                                                <p class="text-muted small mb-0">Undergraduate & postgraduate candidates taking examinations.</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-primary fs-4 ms-2">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Option 2: Faculty -->
+                                <div class="card border border-2 role-selector-card p-3 shadow-sm hover-shadow"
+                                     style="cursor: pointer; transition: all 0.2s ease;"
+                                     onclick="selectCategory('faculty')">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-3 bg-info bg-opacity-10 text-info-emphasis p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                                <i class="bi bi-person-video3 fs-3"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="fw-bold text-dark mb-1">Faculty</h5>
+                                                <p class="text-muted small mb-0">Professors, examiners, and course coordinators managing evaluations.</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-primary fs-4 ms-2">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Option 3: Admin -->
+                                <div class="card border border-2 role-selector-card p-3 shadow-sm hover-shadow"
+                                     style="cursor: pointer; transition: all 0.2s ease;"
+                                     onclick="selectCategory('admin')">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-3 bg-danger bg-opacity-10 text-danger p-3 me-3 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                                <i class="bi bi-shield-lock-fill fs-3"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="fw-bold text-dark mb-1">Admin</h5>
+                                                <p class="text-muted small mb-0">College Administrators & Super Administrators managing platforms.</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-primary fs-4 ms-2">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-light border small text-muted text-center py-2 mb-0">
+                                <i class="bi bi-info-circle me-1 text-primary"></i>
+                                Select an account type above to access dedicated authentication forms.
+                            </div>
+                        </div>
+
+
+                        <!-- SCREEN 2: ACTIVE CATEGORY WORKSPACE -->
+                        <div id="screen-category-active" class="{% if not selected_role %}d-none{% endif %}">
+                            
+                            <!-- Header Navigation Bar with Back Button & Role Badge -->
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showCategorySelection()">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Account Types
+                                </button>
+                                <span id="currentCategoryBadge" class="badge bg-primary text-uppercase px-2 py-1 font-monospace" style="font-size: 0.8rem;">
+                                    {% if selected_role == 'student' %}Student Portal
+                                    {% elif selected_role == 'faculty' %}Faculty Portal
+                                    {% elif selected_role in ['admin', 'college_admin', 'super_admin'] %}Admin Portal
+                                    {% else %}User Portal{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 1: STUDENT PORTAL (Normal vs Demo)                     -->
+                            <!-- ============================================================== -->
+                            <div id="section-student" class="role-section {% if selected_role != 'student' %}d-none{% endif %}">
+                                
+                                <!-- Normal Mode Wrapper for Student -->
+                                <div id="student-normal-wrapper" class="{% if auth_mode == 'demo' %}d-none{% endif %}">
+                                    <!-- Navigation Tabs: Student Login vs Student Sign Up -->
+                                    <ul class="nav nav-pills nav-fill mb-4 border rounded p-1 bg-light auth-tab-nav" id="studentTabs">
+                                        <li class="nav-item">
+                                            <button type="button" id="tab-btn-student-login"
+                                                    class="nav-link auth-tab-btn {% if active_tab != 'signup' %}active{% else %}text-secondary{% endif %}"
+                                                    onclick="switchAuthTab('student', 'login')">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Student Login
+                                            </button>
+                                        </li>
+                                        <li class="nav-item">
+                                            <button type="button" id="tab-btn-student-signup"
+                                                    class="nav-link auth-tab-btn {% if active_tab == 'signup' %}active{% else %}text-secondary{% endif %}"
+                                                    onclick="switchAuthTab('student', 'signup')">
+                                                <i class="bi bi-person-plus-fill me-1"></i> Student Sign Up
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Student Login View -->
+                                    <div id="student-login-view" class="auth-form-card {% if active_tab == 'signup' %}d-none{% endif %}">
+                                        <div class="mb-3">
+                                            <h5 class="fw-bold text-primary mb-1">Student Sign In</h5>
+                                            <p class="text-secondary small mb-0">Enter your Email Address, Roll Number, or College Login Identifier.</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('auth.login') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="role" value="student">
+                                            <input type="hidden" name="auth_mode" value="normal">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address / Roll Number</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person-badge"></i></span>
+                                                    <input type="text" class="form-control" name="identifier" value="{{ identifier or '' }}" required autofocus placeholder="Enter your email address or registration number">
+                                                </div>
+                                                <div class="form-text" style="font-size: 0.75rem;">Accepts institutional email, personal email, or registration number.</div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase mb-0">Password</label>
+                                                    <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none text-primary fw-semibold">Forgot Password?</a>
+                                                </div>
+                                                <div class="input-group mt-1">
+                                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-key-fill"></i></span>
+                                                    <input type="password" class="form-control" id="pwd_student_login" name="password" required placeholder="Enter your password">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_student_login', 'icon_student_login')">
+                                                        <i class="bi bi-eye" id="icon_student_login"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="rememberStudent" name="remember">
+                                                <label class="form-check-label small text-secondary" for="rememberStudent">Remember Me on this device</label>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Student Portal
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="text-muted small">New academic candidate?</span>
+                                            <a href="javascript:void(0)" onclick="switchAuthTab('student', 'signup')" class="small fw-semibold text-primary ms-1">Create Student Account</a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Student Sign Up View -->
+                                    <div id="student-signup-view" class="auth-form-card {% if active_tab != 'signup' %}d-none{% endif %}">
+                                        <div class="mb-3">
+                                            <h5 class="fw-bold text-primary mb-1">Student Registration</h5>
+                                            <p class="text-secondary small mb-0">Create an official candidate profile for online examination access.</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('auth.signup_student') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Full Name <span class="text-danger">*</span></label>
+                                                <input type="text" name="full_name" class="form-control" required placeholder="e.g. Sai Kumar">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">College Name <span class="text-danger">*</span></label>
+                                                <select name="college_id" class="form-select" required>
+                                                    <option value="" disabled selected>-- Select Your Affiliated College --</option>
+                                                    {% for c in colleges %}
+                                                        <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Roll / Registration Number <span class="text-danger">*</span></label>
+                                                    <input type="text" name="roll_number" class="form-control font-monospace" required placeholder="e.g. 2025DAMBT12345">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Phone Number <span class="text-danger">*</span></label>
+                                                    <input type="tel" name="phone_number" class="form-control" required placeholder="e.g. 9876543210">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address <span class="text-danger">*</span></label>
+                                                <input type="email" name="email" class="form-control" required placeholder="e.g. candidate@college.edu">
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Create Password <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="password" id="pwd_student_signup" name="password" class="form-control" required placeholder="Minimum 8 characters">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_student_signup', 'icon_student_signup')">
+                                                            <i class="bi bi-eye" id="icon_student_signup"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Confirm Password <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="password" id="pwd_student_confirm" name="confirm_password" class="form-control" required placeholder="Re-enter password">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_student_confirm', 'icon_student_confirm')">
+                                                            <i class="bi bi-eye" id="icon_student_confirm"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="alert alert-info py-2 small mb-3">
+                                                <i class="bi bi-info-circle me-1"></i> Student registrations require administrative verification before examination access is unlocked.
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                                                <i class="bi bi-person-check-fill me-1"></i> Register Student Account
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="text-muted small">Already registered?</span>
+                                            <a href="javascript:void(0)" onclick="switchAuthTab('student', 'login')" class="small fw-semibold text-primary ms-1">Sign In Here</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Demo Mode Form for Student -->
+                                <div id="student-demo-wrapper" class="auth-form-card {% if auth_mode != 'demo' %}d-none{% endif %}">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">
+                                                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Student Demo Evaluation Session
+                                            </h5>
+                                            <p class="text-secondary small mb-0">Enter test information. Demo accounts are auto-provisioned and linked to live examinations.</p>
+                                        </div>
+                                        <span class="badge bg-warning text-dark font-monospace">DEMO</span>
+                                    </div>
+
+                                    <form method="POST" action="{{ url_for('auth.demo_login') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="role" value="student">
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Student Name</label>
+                                                <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sharma" value="Rahul Sharma">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address</label>
+                                                <input type="email" name="email" class="form-control" placeholder="e.g. rahul.demo@demotech.edu" value="rahul.demo@demotech.edu">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Roll / Registration Number</label>
+                                                <input type="text" name="roll_number" class="form-control font-monospace" placeholder="e.g. DEMO-CSE-2026" value="DEMO-CSE-2026">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Branch</label>
+                                                <select name="branch" class="form-select">
+                                                    <option value="CSE" selected>Computer Science & Engineering</option>
+                                                    <option value="AIDS">Artificial Intelligence & Data Science</option>
+                                                    <option value="ECE">Electronics & Communication Engineering</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold text-secondary small text-uppercase">College Name</label>
+                                            <input type="text" name="college_name" class="form-control bg-light" value="Demo Institute of Technology & Science" readonly>
+                                            <div class="form-text" style="font-size: 0.75rem;">Assigned to isolated demonstration tenant. Real college records are protected.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold text-secondary small text-uppercase">Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="pwd_demo_student" name="password" class="form-control" value="Demo@123" placeholder="Enter demo password">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_demo_student', 'icon_demo_student')">
+                                                    <i class="bi bi-eye" id="icon_demo_student"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow-sm">
+                                            <i class="bi bi-box-arrow-in-right me-1"></i> Launch Student Demo Dashboard
+                                        </button>
+                                    </form>
+
+                                    <div class="text-center mt-3">
+                                        <a href="javascript:void(0)" onclick="switchAuthMode('normal')" class="small text-muted text-decoration-none">
+                                            <i class="bi bi-arrow-left me-1"></i> Switch to Normal Account Sign In
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 2: FACULTY PORTAL (Normal vs Demo)                     -->
+                            <!-- ============================================================== -->
+                            <div id="section-faculty" class="role-section {% if selected_role != 'faculty' %}d-none{% endif %}">
+                                
+                                <!-- Normal Mode Wrapper for Faculty -->
+                                <div id="faculty-normal-wrapper" class="{% if auth_mode == 'demo' %}d-none{% endif %}">
+                                    <!-- Navigation Tabs: Faculty Login vs Faculty Sign Up -->
+                                    <ul class="nav nav-pills nav-fill mb-4 border rounded p-1 bg-light auth-tab-nav" id="facultyTabs">
+                                        <li class="nav-item">
+                                            <button type="button" id="tab-btn-faculty-login"
+                                                    class="nav-link auth-tab-btn {% if active_tab != 'signup' %}active{% else %}text-secondary{% endif %}"
+                                                    onclick="switchAuthTab('faculty', 'login')">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Faculty Login
+                                            </button>
+                                        </li>
+                                        <li class="nav-item">
+                                            <button type="button" id="tab-btn-faculty-signup"
+                                                    class="nav-link auth-tab-btn {% if active_tab == 'signup' %}active{% else %}text-secondary{% endif %}"
+                                                    onclick="switchAuthTab('faculty', 'signup')">
+                                                <i class="bi bi-person-plus-fill me-1"></i> Faculty Sign Up
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Faculty Login View -->
+                                    <div id="faculty-login-view" class="auth-form-card {% if active_tab == 'signup' %}d-none{% endif %}">
+                                        <div class="mb-3">
+                                            <h5 class="fw-bold text-primary mb-1">Faculty Sign In</h5>
+                                            <p class="text-secondary small mb-0">Enter your Faculty ID or Registered Institutional Email.</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('auth.login') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="role" value="faculty">
+                                            <input type="hidden" name="auth_mode" value="normal">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address / Faculty ID</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-person-workspace"></i></span>
+                                                    <input type="text" class="form-control" name="identifier" value="{{ identifier or '' }}" required autofocus placeholder="Enter your email address or Faculty ID">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase mb-0">Password</label>
+                                                    <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none text-primary fw-semibold">Forgot Password?</a>
+                                                </div>
+                                                <div class="input-group mt-1">
+                                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-key-fill"></i></span>
+                                                    <input type="password" class="form-control" id="pwd_faculty_login" name="password" required placeholder="Enter your password">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_faculty_login', 'icon_faculty_login')">
+                                                        <i class="bi bi-eye" id="icon_faculty_login"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="rememberFaculty" name="remember">
+                                                <label class="form-check-label small text-secondary" for="rememberFaculty">Remember Me on this device</label>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Faculty Portal
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="text-muted small">New faculty instructor?</span>
+                                            <a href="javascript:void(0)" onclick="switchAuthTab('faculty', 'signup')" class="small fw-semibold text-primary ms-1">Create Faculty Account</a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Faculty Sign Up View -->
+                                    <div id="faculty-signup-view" class="auth-form-card {% if active_tab != 'signup' %}d-none{% endif %}">
+                                        <div class="mb-3">
+                                            <h5 class="fw-bold text-primary mb-1">Faculty Registration</h5>
+                                            <p class="text-secondary small mb-0">Register as a teaching examiner or course coordinator.</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('auth.signup_faculty') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Full Name <span class="text-danger">*</span></label>
+                                                <input type="text" name="full_name" class="form-control" required placeholder="e.g. Dr. Anita Sharma">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">College Name <span class="text-danger">*</span></label>
+                                                <select name="college_id" class="form-select" required>
+                                                    <option value="" disabled selected>-- Select Your Affiliated College --</option>
+                                                    {% for c in colleges %}
+                                                        <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Faculty ID / Employee ID <span class="text-danger">*</span></label>
+                                                    <input type="text" name="faculty_id" class="form-control font-monospace" required placeholder="e.g. FAC-CSE-101">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Phone Number <span class="text-danger">*</span></label>
+                                                    <input type="tel" name="phone_number" class="form-control" required placeholder="e.g. 9849012345">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Institutional Email Address <span class="text-danger">*</span></label>
+                                                <input type="email" name="email" class="form-control" required placeholder="e.g. professor@college.edu">
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Create Password <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="password" id="pwd_faculty_signup" name="password" class="form-control" required placeholder="Minimum 8 characters">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_faculty_signup', 'icon_faculty_signup')">
+                                                            <i class="bi bi-eye" id="icon_faculty_signup"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Confirm Password <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="password" id="pwd_faculty_confirm" name="confirm_password" class="form-control" required placeholder="Re-enter password">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_faculty_confirm', 'icon_faculty_confirm')">
+                                                            <i class="bi bi-eye" id="icon_faculty_confirm"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="alert alert-warning py-2 small mb-3">
+                                                <i class="bi bi-shield-exclamation me-1"></i> Faculty registrations require verification and approval by the College Administrator before examination authoring is authorized.
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                                                <i class="bi bi-person-badge-fill me-1"></i> Register Faculty Account
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="text-muted small">Already have faculty access?</span>
+                                            <a href="javascript:void(0)" onclick="switchAuthTab('faculty', 'login')" class="small fw-semibold text-primary ms-1">Sign In Here</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Demo Mode Form for Faculty -->
+                                <div id="faculty-demo-wrapper" class="auth-form-card {% if auth_mode != 'demo' %}d-none{% endif %}">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">
+                                                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Faculty Demo Evaluation Session
+                                            </h5>
+                                            <p class="text-secondary small mb-0">Experience full examination authoring, attendance tracking, marks analysis & ranking reports.</p>
+                                        </div>
+                                        <span class="badge bg-warning text-dark font-monospace">DEMO</span>
+                                    </div>
+
+                                    <form method="POST" action="{{ url_for('auth.demo_login') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="role" value="faculty">
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Faculty Name</label>
+                                                <input type="text" name="name" class="form-control" placeholder="e.g. Dr. Vikram Nambiar" value="Dr. Vikram Nambiar">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address</label>
+                                                <input type="email" name="email" class="form-control" placeholder="e.g. examiner.demo@demotech.edu" value="examiner.demo@demotech.edu">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Faculty ID</label>
+                                                <input type="text" name="faculty_id" class="form-control font-monospace" placeholder="e.g. FAC-DEMO-01" value="FAC-DEMO-01">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Department</label>
+                                                <input type="text" name="department" class="form-control" value="Computer Science & Engineering">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold text-secondary small text-uppercase">College Name</label>
+                                            <input type="text" name="college_name" class="form-control bg-light" value="Demo Institute of Technology & Science" readonly>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold text-secondary small text-uppercase">Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="pwd_demo_faculty" name="password" class="form-control" value="Demo@123" placeholder="Enter demo password">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_demo_faculty', 'icon_demo_faculty')">
+                                                    <i class="bi bi-eye" id="icon_demo_faculty"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow-sm">
+                                            <i class="bi bi-box-arrow-in-right me-1"></i> Launch Faculty Demo Dashboard
+                                        </button>
+                                    </form>
+
+                                    <div class="text-center mt-3">
+                                        <a href="javascript:void(0)" onclick="switchAuthMode('normal')" class="small text-muted text-decoration-none">
+                                            <i class="bi bi-arrow-left me-1"></i> Switch to Normal Account Sign In
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            <!-- ============================================================== -->
+                            <!-- SECTION 3: ADMIN PORTAL (Normal vs Demo)                       -->
+                            <!-- ============================================================== -->
+                            <div id="section-admin" class="role-section {% if selected_role not in ['admin', 'college_admin', 'super_admin'] %}d-none{% endif %}">
+                                
+                                <!-- Normal Mode Wrapper for Admin -->
+                                <div id="admin-normal-wrapper" class="{% if auth_mode == 'demo' %}d-none{% endif %}">
+                                    <!-- Navigation Tabs: Admin Login vs Admin Sign Up -->
+                                    <ul class="nav nav-pills nav-fill mb-4 border rounded p-1 bg-light auth-tab-nav" id="adminTabs">
+                                        <li class="nav-item">
+                                            <button type="button" id="tab-btn-admin-login"
+                                                    class="nav-link auth-tab-btn {% if active_tab != 'signup' %}active{% else %}text-secondary{% endif %}"
+                                                    onclick="switchAuthTab('admin', 'login')">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Admin Login
+                                            </button>
+                                        </li>
+                                        <li class="nav-item">
+                                            <button type="button" id="tab-btn-admin-signup"
+                                                    class="nav-link auth-tab-btn {% if active_tab == 'signup' %}active{% else %}text-secondary{% endif %}"
+                                                    onclick="switchAuthTab('admin', 'signup')">
+                                                <i class="bi bi-person-plus-fill me-1"></i> Admin Sign Up
+                                            </button>
+                                        </li>
+                                    </ul>
+
+                                    <!-- Admin Login View -->
+                                    <div id="admin-login-view" class="auth-form-card {% if active_tab == 'signup' %}d-none{% endif %}">
+                                        <div class="mb-3">
+                                            <h5 class="fw-bold text-primary mb-1">Administrative Sign In</h5>
+                                            <p class="text-secondary small mb-0">Authorized access for College Administrators and Super Administrators.</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('auth.login') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="role" value="admin">
+                                            <input type="hidden" name="auth_mode" value="normal">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address / Administrator ID</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-shield-lock"></i></span>
+                                                    <input type="text" class="form-control" name="identifier" value="{{ identifier or '' }}" required autofocus placeholder="Enter admin email or call sign">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase mb-0">Password</label>
+                                                    <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none text-primary fw-semibold">Forgot Password?</a>
+                                                </div>
+                                                <div class="input-group mt-1">
+                                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-key-fill"></i></span>
+                                                    <input type="password" class="form-control" id="pwd_admin_login" name="password" required placeholder="Enter password">
+                                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_admin_login', 'icon_admin_login')">
+                                                        <i class="bi bi-eye" id="icon_admin_login"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="rememberAdmin" name="remember">
+                                                <label class="form-check-label small text-secondary" for="rememberAdmin">Remember Me on this device</label>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                                                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Admin Portal
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="text-muted small">New college administrator?</span>
+                                            <a href="javascript:void(0)" onclick="switchAuthTab('admin', 'signup')" class="small fw-semibold text-primary ms-1">Register College Admin</a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Admin Sign Up View (College Admin Registration) -->
+                                    <div id="admin-signup-view" class="auth-form-card {% if active_tab != 'signup' %}d-none{% endif %}">
+                                        <div class="mb-3">
+                                            <h5 class="fw-bold text-primary mb-1">College Administrator Registration</h5>
+                                            <p class="text-secondary small mb-0">Register an administrative authority for an affiliated college.</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ url_for('auth.signup_admin') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Full Name <span class="text-danger">*</span></label>
+                                                <input type="text" name="full_name" class="form-control" required placeholder="e.g. Dr. R. Ramanathan">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">College Name <span class="text-danger">*</span></label>
+                                                <select name="college_id" class="form-select" required>
+                                                    <option value="" disabled selected>-- Select Your Managed College --</option>
+                                                    {% for c in colleges %}
+                                                        <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Admin ID <span class="text-danger">*</span></label>
+                                                    <input type="text" name="admin_id" class="form-control font-monospace" required placeholder="e.g. ADM-ENG-01">
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Phone Number <span class="text-danger">*</span></label>
+                                                    <input type="tel" name="phone_number" class="form-control" required placeholder="e.g. 9849099999">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Official Email Address <span class="text-danger">*</span></label>
+                                                <input type="email" name="email" class="form-control" required placeholder="e.g. admin@college.edu">
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Create Password <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="password" id="pwd_admin_signup" name="password" class="form-control" required placeholder="Minimum 8 characters">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_admin_signup', 'icon_admin_signup')">
+                                                            <i class="bi bi-eye" id="icon_admin_signup"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label fw-semibold text-secondary small text-uppercase">Confirm Password <span class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <input type="password" id="pwd_admin_confirm" name="confirm_password" class="form-control" required placeholder="Re-enter password">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_admin_confirm', 'icon_admin_confirm')">
+                                                            <i class="bi bi-eye" id="icon_admin_confirm"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="alert alert-warning py-2 small mb-3">
+                                                <i class="bi bi-shield-lock-fill me-1"></i> College Administrator accounts require authorization and approval by the Super Administrator before activation. Note: Super Administrator accounts are strictly provisioned internally and cannot be registered publicly.
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                                                <i class="bi bi-shield-check me-1"></i> Register College Admin Account
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="text-muted small">Already authorized?</span>
+                                            <a href="javascript:void(0)" onclick="switchAuthTab('admin', 'login')" class="small fw-semibold text-primary ms-1">Sign In Here</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Demo Mode Form for College Admin -->
+                                <div id="admin-demo-wrapper" class="auth-form-card {% if auth_mode != 'demo' %}d-none{% endif %}">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <h5 class="fw-bold text-dark mb-1">
+                                                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> College Admin Demo Evaluation Session
+                                            </h5>
+                                            <p class="text-secondary small mb-0">Demonstrate institutional management: Courses, Branches, Faculty, Students & Exam Governance.</p>
+                                        </div>
+                                        <span class="badge bg-warning text-dark font-monospace">DEMO</span>
+                                    </div>
+
+                                    <form method="POST" action="{{ url_for('auth.demo_login') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="role" value="college_admin">
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Admin Name</label>
+                                                <input type="text" name="name" class="form-control" placeholder="e.g. Dr. K. Radhakrishnan" value="Dr. K. Radhakrishnan">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Email Address</label>
+                                                <input type="email" name="email" class="form-control" placeholder="e.g. admin.demo@demotech.edu" value="admin.demo@demotech.edu">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">College Name</label>
+                                                <input type="text" name="college_name" class="form-control bg-light" value="Demo Institute of Technology & Science" readonly>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-semibold text-secondary small text-uppercase">Admin ID</label>
+                                                <input type="text" name="admin_id" class="form-control font-monospace" placeholder="e.g. ADM-DEMO-01" value="ADM-DEMO-01">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold text-secondary small text-uppercase">Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="pwd_demo_admin" name="password" class="form-control" value="Demo@123" placeholder="Enter demo password">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('pwd_demo_admin', 'icon_demo_admin')">
+                                                    <i class="bi bi-eye" id="icon_demo_admin"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-light border small text-muted mb-3 py-2">
+                                            <i class="bi bi-shield-check text-primary me-1"></i> Security Notice: Super Administrator accounts require authorized production credentials and cannot be provisioned dynamically via Demo Mode.
+                                        </div>
+
+                                        <button type="submit" class="btn btn-warning w-100 py-2 fw-bold text-dark shadow-sm">
+                                            <i class="bi bi-box-arrow-in-right me-1"></i> Launch College Admin Demo Dashboard
+                                        </button>
+                                    </form>
+
+                                    <div class="text-center mt-3">
+                                        <a href="javascript:void(0)" onclick="switchAuthMode('normal')" class="small text-muted text-decoration-none">
+                                            <i class="bi bi-arrow-left me-1"></i> Switch to Normal Account Sign In
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Authentication Mode Switcher (Normal vs Demo)
+let currentAuthMode = "{{ auth_mode or 'normal' }}";
+
+function switchAuthMode(mode) {
+    currentAuthMode = mode;
+    const btnNormal = document.getElementById('btn-mode-normal');
+    const btnDemo = document.getElementById('btn-mode-demo');
+    const demoBanner = document.getElementById('demo-mode-banner');
+
+    if (mode === 'demo') {
+        if (btnDemo) {
+            btnDemo.classList.add('active', 'btn-warning', 'text-dark', 'fw-bold', 'shadow-sm');
+            btnDemo.classList.remove('btn-light', 'text-secondary');
+        }
+        if (btnNormal) {
+            btnNormal.classList.remove('active', 'btn-primary', 'shadow-sm');
+            btnNormal.classList.add('btn-light', 'text-secondary');
+        }
+        if (demoBanner) demoBanner.classList.remove('d-none');
+
+        // Toggle wrappers across all roles
+        ['student', 'faculty', 'admin'].forEach(role => {
+            const normalWrapper = document.getElementById(`${role}-normal-wrapper`);
+            const demoWrapper = document.getElementById(`${role}-demo-wrapper`);
+            if (normalWrapper) normalWrapper.classList.add('d-none');
+            if (demoWrapper) {
+                demoWrapper.classList.remove('d-none');
+                demoWrapper.style.opacity = '0';
+                setTimeout(() => { demoWrapper.style.opacity = '1'; }, 10);
+            }
+        });
+    } else {
+        if (btnNormal) {
+            btnNormal.classList.add('active', 'btn-primary', 'shadow-sm');
+            btnNormal.classList.remove('btn-light', 'text-secondary');
+        }
+        if (btnDemo) {
+            btnDemo.classList.remove('active', 'btn-warning', 'text-dark', 'fw-bold', 'shadow-sm');
+            btnDemo.classList.add('btn-light', 'text-secondary');
+        }
+        if (demoBanner) demoBanner.classList.add('d-none');
+
+        // Toggle wrappers across all roles
+        ['student', 'faculty', 'admin'].forEach(role => {
+            const normalWrapper = document.getElementById(`${role}-normal-wrapper`);
+            const demoWrapper = document.getElementById(`${role}-demo-wrapper`);
+            if (demoWrapper) demoWrapper.classList.add('d-none');
+            if (normalWrapper) {
+                normalWrapper.classList.remove('d-none');
+                normalWrapper.style.opacity = '0';
+                setTimeout(() => { normalWrapper.style.opacity = '1'; }, 10);
+            }
+        });
+    }
+
+    // Update browser URL query
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('auth_mode', mode);
+    window.history.replaceState({}, '', currentUrl);
+}
+
+// Category Navigation Logic
+function selectCategory(category) {
+    // Normalise subroles
+    if (category === 'college_admin' || category === 'super_admin') {
+        category = 'admin';
+    }
+
+    document.getElementById('screen-category-selection').classList.add('d-none');
+    document.getElementById('screen-category-active').classList.remove('d-none');
+
+    // Hide all role sections
+    document.querySelectorAll('.role-section').forEach(el => el.classList.add('d-none'));
+
+    const badge = document.getElementById('currentCategoryBadge');
+    if (category === 'student') {
+        document.getElementById('section-student').classList.remove('d-none');
+        badge.className = 'badge bg-primary text-uppercase px-2 py-1 font-monospace';
+        badge.textContent = 'Student Portal';
+    } else if (category === 'faculty') {
+        document.getElementById('section-faculty').classList.remove('d-none');
+        badge.className = 'badge bg-info text-dark text-uppercase px-2 py-1 font-monospace';
+        badge.textContent = 'Faculty Portal';
+    } else if (category === 'admin') {
+        document.getElementById('section-admin').classList.remove('d-none');
+        badge.className = 'badge bg-danger text-uppercase px-2 py-1 font-monospace';
+        badge.textContent = 'Admin Portal';
+    }
+
+    // Update browser URL state without page reload
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('role', category);
+    window.history.replaceState({}, '', currentUrl);
+}
+
+function showCategorySelection() {
+    document.getElementById('screen-category-selection').classList.remove('d-none');
+    document.getElementById('screen-category-active').classList.add('d-none');
+
+    // Clear URL parameters
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.delete('role');
+    currentUrl.searchParams.delete('category');
+    currentUrl.searchParams.delete('tab');
+    window.history.replaceState({}, '', currentUrl);
+}
+
+// Robust Tab Switching (Login vs Sign Up)
+function switchAuthTab(category, tab) {
+    if (category === 'college_admin' || category === 'super_admin') {
+        category = 'admin';
+    }
+
+    const loginBtn = document.getElementById(`tab-btn-${category}-login`);
+    const signupBtn = document.getElementById(`tab-btn-${category}-signup`);
+    const loginView = document.getElementById(`${category}-login-view`);
+    const signupView = document.getElementById(`${category}-signup-view`);
+
+    if (!loginBtn || !signupBtn || !loginView || !signupView) {
+        return;
+    }
+
+    if (tab === 'signup') {
+        signupBtn.classList.add('active');
+        signupBtn.classList.remove('text-secondary');
+        loginBtn.classList.remove('active');
+        loginBtn.classList.add('text-secondary');
+
+        loginView.classList.add('d-none');
+        signupView.classList.remove('d-none');
+        signupView.style.opacity = '0';
+        setTimeout(() => { signupView.style.opacity = '1'; }, 10);
+    } else {
+        loginBtn.classList.add('active');
+        loginBtn.classList.remove('text-secondary');
+        signupBtn.classList.remove('active');
+        signupBtn.classList.add('text-secondary');
+
+        signupView.classList.add('d-none');
+        loginView.classList.remove('d-none');
+        loginView.style.opacity = '0';
+        setTimeout(() => { loginView.style.opacity = '1'; }, 10);
+    }
+
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('role', category);
+    currentUrl.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', currentUrl);
+}
+
+// Show/Hide Password Toggle
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (!input) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        }
+    } else {
+        input.type = 'password';
+        if (icon) {
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+}
+
+// Initialize on DOM Ready based on URL or Server Context
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let roleParam = urlParams.get('role') || urlParams.get('category') || "{{ selected_role or '' }}";
+    const tabParam = urlParams.get('tab') || "{{ active_tab or 'login' }}";
+    const modeParam = urlParams.get('auth_mode') || urlParams.get('mode') || "{{ auth_mode or 'normal' }}";
+
+    if (modeParam === 'demo') {
+        switchAuthMode('demo');
+    } else {
+        switchAuthMode('normal');
+    }
+
+    if (roleParam) {
+        if (roleParam === 'college_admin' || roleParam === 'super_admin') {
+            roleParam = 'admin';
+        }
+        selectCategory(roleParam);
+        if (tabParam === 'signup') {
+            switchAuthTab(roleParam, 'signup');
+        } else {
+            switchAuthTab(roleParam, 'login');
+        }
+    }
+});
+</script>
+
+<style>
+/* Institutional Tab Navigation Styles */
+.auth-mode-bar {
+    background-color: #F1F5F9;
+    padding: 3px;
+    border-radius: 8px;
+}
+
+.auth-mode-btn {
+    border-radius: 6px !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border: none !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.auth-tab-nav {
+    background-color: #F1F5F9 !important;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+.auth-tab-btn {
+    border-radius: 6px !important;
+    font-weight: 500;
+    color: #475569 !important;
+    padding: 0.6rem 1rem !important;
+    transition: all 0.2s ease-in-out;
+    border: none !important;
+    background: transparent;
+}
+
+.auth-tab-btn:hover:not(.active) {
+    background-color: rgba(22, 59, 101, 0.08) !important;
+    color: #163B65 !important;
+}
+
+.auth-tab-btn.active {
+    background-color: #163B65 !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(22, 59, 101, 0.25) !important;
+}
+
+.auth-form-card {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-2px);
+    border-color: #163B65 !important;
+    box-shadow: 0 4px 12px rgba(22, 59, 101, 0.12) !important;
+}
+</style>
+{% endblock %}

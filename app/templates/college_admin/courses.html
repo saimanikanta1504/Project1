@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Manage Courses - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Academic Programs & Courses</h3>
+            <p class="text-secondary small mb-0">Define undergraduate and postgraduate degree structures for your college.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- New Course Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-plus-circle me-1"></i> Add New Degree Course
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Course Code</label>
+                            <input type="text" class="form-control text-uppercase" name="code" required placeholder="e.g. BTECH">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Full Course Name</label>
+                            <input type="text" class="form-control" name="name" required placeholder="e.g. Bachelor of Technology">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Program Duration (Years)</label>
+                            <input type="number" class="form-control" name="duration_years" min="1" max="6" value="4" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">Save Course</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses List -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-journal-bookmark me-1"></i> Active Course Directory
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-institutional align-middle">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Program Name</th>
+                                <th>Duration</th>
+                                <th>Branches Registered</th>
+                                <th>Students Enrolled</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in courses %}
+                                <tr>
+                                    <td><span class="badge bg-light text-dark font-monospace border">{{ c.code }}</span></td>
+                                    <td class="fw-bold text-primary">{{ c.name }}</td>
+                                    <td>{{ c.duration_years }} Years</td>
+                                    <td><span class="badge bg-secondary">{{ c.branches|length }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ c.students|length }}</span></td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No courses registered yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

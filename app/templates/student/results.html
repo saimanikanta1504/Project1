@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Examination Result History - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container-fluid px-lg-5">
+        <div class="d-flex align-items-center">
+            <img src="{{ url_for('static', filename='uploads/' + college.logo_filename) }}"
+                 onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                 class="college-badge-logo me-3 shadow-sm" alt="College Crest">
+            <div>
+                <h4 class="institutional-title">{{ college.name }}</h4>
+                <div class="institutional-meta">
+                    Candidate: <strong>{{ student.full_name }}</strong> ({{ student.registration_number }}) &bull;
+                    {{ student.course.code }} &bull; {{ student.branch.code }} &bull; Sem {{ student.semester }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-lg-5 py-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold text-primary mb-0">
+                <i class="bi bi-clock-history me-2"></i> Official Examination Performance History
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Examination Title</th>
+                        <th>Subject & Code</th>
+                        <th>Exam Date</th>
+                        <th>Attempt No.</th>
+                        <th>Total Qs</th>
+                        <th>Correct / Wrong</th>
+                        <th>Marks Obtained</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th class="text-end">Official Documents</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in results %}
+                        <tr>
+                            <td><strong class="text-primary">{{ res.examination.title }}</strong></td>
+                            <td>{{ res.examination.subject.name }} ({{ res.examination.subject.code }})</td>
+                            <td>{{ res.examination.exam_date.strftime('%d-%b-%Y') }}</td>
+                            <td><span class="badge bg-light text-dark border">#{{ res.attempt.attempt_number }}</span></td>
+                            <td>{{ res.total_questions }}</td>
+                            <td>
+                                <span class="text-success fw-bold">{{ res.correct_answers }}</span> /
+                                <span class="text-danger fw-bold">{{ res.wrong_answers }}</span>
+                            </td>
+                            <td><strong>{{ res.obtained_marks }}</strong> / {{ res.total_marks }}</td>
+                            <td><strong>{{ res.percentage }}%</strong></td>
+                            <td>
+                                {% if res.is_passed %}
+                                    <span class="badge bg-success">PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger">FAIL</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('results.download_pdf', result_id=res.id) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </a>
+                                <a href="{{ url_for('results.view_result', result_id=res.id) }}" class="btn btn-sm btn-outline-primary ms-1">
+                                    Scorecard
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">No examination results recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

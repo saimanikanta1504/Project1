@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Examinations Oversight - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">College Examination Master Registry</h3>
+            <p class="text-secondary small mb-0">Overview of all examinations drafted, scheduled, and completed in this college.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Exam Title</th>
+                        <th>Subject & Code</th>
+                        <th>Target Discipline</th>
+                        <th>Examiner Faculty</th>
+                        <th>Schedule</th>
+                        <th>Questions</th>
+                        <th>Marks</th>
+                        <th>Status</th>
+                        <th>Attempts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in examinations %}
+                        <tr>
+                            <td><strong class="text-primary">{{ exam.title }}</strong></td>
+                            <td>{{ exam.subject.name }} <span class="badge bg-light text-dark border font-monospace">{{ exam.subject.code }}</span></td>
+                            <td>{{ exam.course.code }} &bull; {{ exam.branch.code }} &bull; Sem {{ exam.semester }}</td>
+                            <td>{{ exam.faculty.full_name }}</td>
+                            <td>
+                                <div>{{ exam.exam_date.strftime('%d-%b-%Y') }}</div>
+                                <small class="text-muted">{{ exam.duration_minutes }} Mins</small>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ exam.questions|length }}</span></td>
+                            <td>{{ exam.total_marks }} pts</td>
+                            <td><span class="badge-status {{ exam.status }}">{{ exam.status }}</span></td>
+                            <td><span class="badge bg-primary">{{ exam.attempts|length }}</span></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">No examinations scheduled yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

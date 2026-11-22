@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Manage Branches - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Academic Branches & Specializations</h3>
+            <p class="text-secondary small mb-0">Departmental branch definitions mapped under college degree courses.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- New Branch Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-diagram-3 me-1"></i> Register New Branch
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Parent Degree Course</label>
+                            <select class="form-select" name="course_id" required>
+                                {% for c in courses %}
+                                    <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Branch Code</label>
+                            <input type="text" class="form-control text-uppercase" name="code" required placeholder="e.g. CSE">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Branch Name</label>
+                            <input type="text" class="form-control" name="name" required placeholder="e.g. Computer Science & Engineering">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">Save Branch</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branches List -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-list-columns-reverse me-1"></i> Registered Academic Branches
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-institutional align-middle">
+                        <thead>
+                            <tr>
+                                <th>Branch Code</th>
+                                <th>Branch Name</th>
+                                <th>Course Program</th>
+                                <th>Subjects</th>
+                                <th>Students</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in branches %}
+                                <tr>
+                                    <td><span class="badge bg-light text-dark font-monospace border">{{ b.code }}</span></td>
+                                    <td class="fw-bold text-primary">{{ b.name }}</td>
+                                    <td>{{ b.course.name }} ({{ b.course.code }})</td>
+                                    <td><span class="badge bg-secondary">{{ b.subjects|length }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ b.students|length }}</span></td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No branches created yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

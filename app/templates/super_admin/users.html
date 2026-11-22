@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Platform User Directory - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Platform Master User Directory</h3>
+            <p class="text-secondary small mb-0">System-wide audit of credentials, institutional bindings, and account statuses.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('super_admin.users') }}" class="btn btn-outline-secondary {% if not current_filter %}active{% endif %}">All Roles</a>
+                <a href="{{ url_for('super_admin.users', role='student') }}" class="btn btn-outline-secondary {% if current_filter == 'student' %}active{% endif %}">Students</a>
+                <a href="{{ url_for('super_admin.users', role='faculty') }}" class="btn btn-outline-secondary {% if current_filter == 'faculty' %}active{% endif %}">Faculty</a>
+                <a href="{{ url_for('super_admin.users', role='college_admin') }}" class="btn btn-outline-secondary {% if current_filter == 'college_admin' %}active{% endif %}">College Admins</a>
+                <a href="{{ url_for('super_admin.users', role='super_admin') }}" class="btn btn-outline-secondary {% if current_filter == 'super_admin' %}active{% endif %}">Super Admins</a>
+            </div>
+            <a href="{{ url_for('super_admin.new_super_admin') }}" class="btn btn-danger btn-sm">
+                <i class="bi bi-shield-plus me-1"></i> Provision Super Admin
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Identifier / Login ID</th>
+                        <th>User Role</th>
+                        <th>Associated College</th>
+                        <th>Email</th>
+                        <th>Account Status</th>
+                        <th>Created Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td><strong class="font-monospace text-primary">{{ u.identifier }}</strong></td>
+                            <td>
+                                <span class="badge {% if u.role == 'super_admin' %}bg-danger{% elif u.role == 'college_admin' %}bg-primary{% elif u.role == 'faculty' %}bg-secondary{% else %}bg-info text-dark{% endif %} text-uppercase">
+                                    {{ u.role.replace('_', ' ') }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if u.college %}
+                                    <span class="fw-semibold">{{ u.college.name }}</span>
+                                    <span class="badge bg-light text-muted border font-monospace">{{ u.college.code }}</span>
+                                {% else %}
+                                    <span class="text-muted fst-italic">Global Platform Level</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ u.email }}</td>
+                            <td>
+                                {% if u.registration_status in ['active', 'approved'] and u.is_active %}
+                                    <span class="badge bg-success">Active / Approved</span>
+                                {% elif u.registration_status in ['pending_approval', 'pending_verification'] or not u.is_active %}
+                                    <span class="badge bg-warning text-dark">Pending Approval</span>
+                                {% elif u.registration_status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Deactivated</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ u.created_at.strftime('%d-%b-%Y') }}</td>
+                            <td class="text-end">
+                                {% if u.role == 'college_admin' and (u.registration_status in ['pending_approval', 'pending_verification'] or not u.is_active) and u.registration_status != 'rejected' %}
+                                    <form method="POST" action="{{ url_for('super_admin.approve_admin', user_id=u.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success py-0 px-2 fw-semibold" title="Approve Administrator">
+                                            <i class="bi bi-check-lg me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('super_admin.reject_admin', user_id=u.id) }}" class="d-inline ms-1">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Reject Registration">
+                                            <i class="bi bi-x-lg me-1"></i> Reject
+                                        </button>
+                                    </form>
+                                {% elif u.is_active %}
+                                    <span class="text-muted small"><i class="bi bi-check-circle-fill text-success me-1"></i> Authorized</span>
+                                {% else %}
+                                    <span class="text-muted small">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No users found matching current filter.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

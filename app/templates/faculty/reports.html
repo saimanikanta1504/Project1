@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Examination Analytics: {{ exam.title }} - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Assessment Analytics & Performance Report</h3>
+            <p class="text-secondary small mb-0">
+                <strong>{{ exam.title }}</strong> &bull; Subject: {{ exam.subject.name }} ({{ exam.subject.code }}) &bull; Date: {{ exam.exam_date.strftime('%d-%b-%Y') }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistical Tiles -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-sm-4">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ total_candidates }}</div>
+                <div class="stat-label">Candidates</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4">
+            <div class="card stat-tile success">
+                <div class="stat-value">{{ highest_marks }}</div>
+                <div class="stat-label">Highest Score</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ average_marks }}</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4">
+            <div class="card stat-tile danger">
+                <div class="stat-value">{{ lowest_marks }}</div>
+                <div class="stat-label">Lowest Score</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4">
+            <div class="card stat-tile success">
+                <div class="stat-value">{{ pass_percentage }}%</div>
+                <div class="stat-label">Pass Rate</div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ exam.total_marks }}</div>
+                <div class="stat-label">Max Marks</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Chart.js Grade Distribution -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <i class="bi bi-bar-chart-fill me-2 text-primary"></i> Performance Distribution
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="scoreDistributionChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question-Wise Difficulty Analysis -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <i class="bi bi-ui-checks me-2 text-primary"></i> Question Accuracy Statistics
+                </div>
+                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                    <table class="table table-sm table-institutional mb-0">
+                        <thead>
+                            <tr>
+                                <th>Q#</th>
+                                <th>Correct</th>
+                                <th>Incorrect</th>
+                                <th>Skipped</th>
+                                <th>Accuracy Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in question_stats %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">Q{{ stat.question.question_number }}</span></td>
+                                    <td class="text-success fw-bold">{{ stat.correct }}</td>
+                                    <td class="text-danger fw-bold">{{ stat.wrong }}</td>
+                                    <td class="text-muted">{{ stat.skipped }}</td>
+                                    <td>
+                                        {% set rate = ((stat.correct / total_candidates * 100)|round(1)) if total_candidates > 0 else 0 %}
+                                        <div class="progress" style="height: 16px;">
+                                            <div class="progress-bar {% if rate >= 70 %}bg-success{% elif rate >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                                 role="progressbar" style="width: {{ rate }}%;">
+                                                {{ rate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3 text-muted">No question statistics available.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidate Performance List -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <i class="bi bi-people-fill me-2 text-primary"></i> Candidate Evaluation Records
+        </div>
+        <div class="table-responsive">
+            <table class="table table-institutional align-middle">
+                <thead>
+                    <tr>
+                        <th>Candidate Name</th>
+                        <th>Reg. Number</th>
+                        <th>Correct Responses</th>
+                        <th>Incorrect Responses</th>
+                        <th>Unanswered</th>
+                        <th>Marks Obtained</th>
+                        <th>Percentage</th>
+                        <th>Result Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in results %}
+                        <tr>
+                            <td class="fw-bold">{{ res.student.full_name }}</td>
+                            <td><span class="badge bg-light text-dark border font-monospace">{{ res.student.registration_number }}</span></td>
+                            <td class="text-success fw-bold">{{ res.correct_answers }}</td>
+                            <td class="text-danger fw-bold">{{ res.wrong_answers }}</td>
+                            <td class="text-muted">{{ res.unanswered_questions }}</td>
+                            <td><strong>{{ res.obtained_marks }}</strong> / {{ res.total_marks }}</td>
+                            <td><strong>{{ res.percentage }}%</strong></td>
+                            <td>
+                                {% if res.is_passed %}
+                                    <span class="badge bg-success">PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger">FAIL</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('results.download_pdf', result_id=res.id) }}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                </a>
+                                <a href="{{ url_for('results.view_result', result_id=res.id) }}" class="btn btn-sm btn-outline-primary ms-1">
+                                    Scorecard
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">No candidates have completed this examination yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Score Distribution Chart
+    const ctx = document.getElementById('scoreDistributionChart');
+    if (ctx) {
+        // Compute distribution buckets
+        {% set b1 = results|selectattr('percentage', 'ge', 80)|list|length %}
+        {% set b2 = results|selectattr('percentage', 'ge', 60)|rejectattr('percentage', 'ge', 80)|list|length %}
+        {% set b3 = results|selectattr('percentage', 'ge', 40)|rejectattr('percentage', 'ge', 60)|list|length %}
+        {% set b4 = results|rejectattr('percentage', 'ge', 40)|list|length %}
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Distinction (>=80%)', 'First Class (60-79%)', 'Second Class (40-59%)', 'Failed (<40%)'],
+                datasets: [{
+                    label: 'Number of Candidates',
+                    data: [{{ b1 }}, {{ b2 }}, {{ b3 }}, {{ b4 }}],
+                    backgroundColor: ['#218653', '#245EA8', '#D99A25', '#D64545'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

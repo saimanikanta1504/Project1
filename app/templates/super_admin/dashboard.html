@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Super Admin Dashboard - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Breadcrumb & Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">University Central Super Admin Dashboard</h3>
+            <p class="text-secondary small mb-0">Platform Overview, Multi-Tenancy Health & Cross-College Statistics</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('super_admin.demo_management') }}"
+                class="btn btn-outline-warning btn-sm px-3 fw-semibold">
+                <i class="bi bi-shield-shaded me-1"></i> Demo Management
+            </a>
+            <a href="{{ url_for('super_admin.new_college') }}" class="btn btn-primary btn-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> Register New College
+            </a>
+        </div>
+    </div>
+
+    <!-- Metric Tiles -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile">
+                <div class="stat-value">{{ total_colleges }}</div>
+                <div class="stat-label">Total Colleges</div>
+                <small class="text-muted">{{ active_colleges }} Active | {{ pending_colleges }} Pending</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile success">
+                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-label">Enrolled Students</div>
+                <small class="text-muted">Across all colleges</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile warning">
+                <div class="stat-value">{{ total_faculty }}</div>
+                <div class="stat-label">Active Faculty</div>
+                <small class="text-muted">Examiners & Instructors</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card stat-tile danger">
+                <div class="stat-value">{{ total_exams }}</div>
+                <div class="stat-label">Total Examinations</div>
+                <small class="text-muted">{{ total_attempts }} Submissions</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Registered Colleges Table -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-buildings-fill me-2"></i> Recently Registered Colleges</span>
+                    <a href="{{ url_for('super_admin.colleges') }}"
+                        class="btn btn-sm btn-link text-decoration-none">View All Colleges &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-institutional">
+                        <thead>
+                            <tr>
+                                <th>College</th>
+                                <th>Code</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Registered</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for col in colleges %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ url_for('static', filename='uploads/' + col.logo_filename) }}"
+                                            onerror="this.src='{{ url_for('static', filename='images/default_college_logo.png') }}'"
+                                            class="me-2 rounded border"
+                                            style="width: 32px; height: 32px; object-fit: contain;">
+                                        <span class="fw-semibold">{{ col.name }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark font-monospace border">{{ col.code }}</span>
+                                </td>
+                                <td class="small text-muted">{{ col.email }}</td>
+                                <td>
+                                    <span class="badge-status {{ col.status }}">{{ col.status }}</span>
+                                </td>
+                                <td class="small text-muted">{{ col.created_at.strftime('%d-%b-%Y') }}</td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('super_admin.edit_college', college_id=col.id) }}"
+                                        class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">No colleges registered yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Examinations -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <i class="bi bi-clock-history me-2"></i> Recent Examination Activity
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for exam in recent_exams %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1 fw-bold text-primary small">{{ exam.title }}</h6>
+                            <span class="badge-status {{ exam.status }}">{{ exam.status }}</span>
+                        </div>
+                        <small class="text-muted d-block">{{ exam.college.name }} ({{ exam.college.code }})</small>
+                        <small class="text-secondary">{{ exam.subject.name }} &bull; {{
+                            exam.exam_date.strftime('%d-%b-%Y') }}</small>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">No recent examinations conducted.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

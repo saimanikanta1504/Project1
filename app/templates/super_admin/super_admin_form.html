@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Provision Super Administrator - {{ platform_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-shield-lock-fill me-2"></i> Provision New Super Administrator
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-warning small mb-4">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <strong>Security Notice:</strong> Super Administrators possess unrestricted platform-wide privileges across all affiliated institutions, examinations, and user accounts.
+                    </div>
+
+                    <form method="POST" action="{{ url_for('super_admin.new_super_admin') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase">Super Admin Identifier / Call Sign</label>
+                            <input type="text" name="identifier" class="form-control" placeholder="e.g. SUPERADMIN_2" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase">Official Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="e.g. sysadmin@portal.edu" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase">Secure Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Minimum 8 characters" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small text-uppercase">Confirm Secure Password</label>
+                            <input type="password" name="confirm_password" class="form-control" placeholder="Re-enter password" required>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('super_admin.users', role='super_admin') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger fw-semibold px-4">
+                                <i class="bi bi-check-circle me-1"></i> Authorize Super Admin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
