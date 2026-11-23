@@ -1,8 +1,4 @@
-import os
-from app import create_app
-
-config_name = os.environ.get('FLASK_CONFIG', os.environ.get('FLASK_ENV', 'production'))
-app = create_app(config_name)
+from api.index import app
 
 if __name__ == '__main__':
     app.run()
