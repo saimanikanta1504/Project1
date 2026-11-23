@@ -8,9 +8,15 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
-    # Ensure required directories exist
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(os.path.join(app.root_path, '..', 'instance'), exist_ok=True)
+    # Ensure required directories exist safely (avoid read-only filesystem crash on serverless)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    except OSError:
+        pass
+    try:
+        os.makedirs(os.path.join(app.root_path, '..', 'instance'), exist_ok=True)
+    except OSError:
+        pass
 
     # Initialize extensions
     db.init_app(app)
