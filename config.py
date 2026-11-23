@@ -6,7 +6,10 @@ IS_VERCEL = bool(os.environ.get('VERCEL'))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'multi-college-exam-sec-key-2026-hermes')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = '/tmp/uploads' if IS_VERCEL else os.path.join(BASE_DIR, 'app', 'static', 'uploads')
+    UPLOAD_FOLDER = os.environ.get(
+        'UPLOAD_FOLDER',
+        '/tmp/uploads' if (os.name != 'nt' or IS_VERCEL) else os.path.join(BASE_DIR, 'app', 'static', 'uploads')
+    )
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB max upload
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'svg', 'webp'}
     SESSION_COOKIE_HTTPONLY = True
@@ -36,9 +39,8 @@ class ProductionConfig(Config):
     if _db_url and _db_url.startswith('postgres://'):
         _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
 
-    SQLALCHEMY_DATABASE_URI = _db_url or (
-        'sqlite:////tmp/examination_system.db' if IS_VERCEL else f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'examination_system.db')}"
-    )
+    # In Production on serverless, fallback to /tmp/ SQLite if no external DATABASE_URL is configured
+    SQLALCHEMY_DATABASE_URI = _db_url or 'sqlite:////tmp/examination_system.db'
     DEMO_MODE_ENABLED = os.environ.get('DEMO_MODE_ENABLED', 'true').lower() in ('true', '1', 'yes')
 
 config = {

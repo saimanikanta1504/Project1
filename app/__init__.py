@@ -67,9 +67,9 @@ def create_app(config_name='default'):
 
     # Ensure database schema is up-to-date with new tables and columns
     with app.app_context():
-        from sqlalchemy import inspect, text
-        db.create_all()
         try:
+            db.create_all()
+            from sqlalchemy import inspect, text
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
             with db.engine.connect() as conn:
@@ -106,7 +106,13 @@ def create_app(config_name='default'):
                     if 'registration_status' not in adm_cols:
                         conn.execute(text("ALTER TABLE college_admin_profiles ADD COLUMN registration_status VARCHAR(30) DEFAULT 'active'"))
                 conn.commit()
+
+            # Auto-provision demo institution on serverless / fresh database
+            from app.models import College
+            if College.query.count() == 0:
+                from app.demo_service import get_or_create_demo_college
+                get_or_create_demo_college()
         except Exception as e:
-            app.logger.warning(f"Schema check notice: {e}")
+            app.logger.warning(f"Database bootstrap notice: {e}")
 
     return app
