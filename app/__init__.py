@@ -108,10 +108,11 @@ def create_app(config_name='default'):
                 conn.commit()
 
             # Auto-provision demo institution on serverless / fresh database
-            from app.models import College
-            if College.query.count() == 0:
-                from app.demo_service import get_or_create_demo_college
-                get_or_create_demo_college()
+            if not app.testing and os.environ.get('VERCEL'):
+                from app.models import College
+                if College.query.count() == 0:
+                    from app.demo_service import get_or_create_demo_college
+                    get_or_create_demo_college()
         except Exception as e:
             app.logger.warning(f"Database bootstrap notice: {e}")
 
